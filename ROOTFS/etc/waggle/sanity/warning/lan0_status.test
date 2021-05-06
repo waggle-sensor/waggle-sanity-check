@@ -1,0 +1,10 @@
+#!/bin/bash
+
+linkStatus=$(cat /sys/class/net/lan0/operstate)
+
+if [[ $linkStatus == "up" ]];
+then
+	exit 0
+fi
+
+exit 1

@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import subprocess
+import time
+import logging
+import socket
+from glob import glob
+import configparser
+from typing import NamedTuple, Callable
+
+class ReverseTunnelConfig(NamedTuple):
+    beekeeper_server: str
+    beekeeper_port: str
+
+def read_config_section_dict(filename, section):
+    config = configparser.ConfigParser()
+
+    if not config.read(filename):
+        logging.warning(f"could not read config file {filename}")
+        return {}
+
+    try:
+        return dict(config[section])
+    except Exception:
+        logging.warning("could not read config section [%s]", section)
+
+    return {}
+
+def read_reverse_tunnel_config(filename, section="reverse-tunnel"):
+    d = read_config_section_dict(filename, section)
+
+    return ReverseTunnelConfig(
+        beekeeper_server=d.get("host", None),
+        beekeeper_port=d.get("port", None),
+    )
+
+def ssh_connection_ok(server, port):
+    try:
+
+        # do a lookup of the ip for the server
+        server_addr = f"{socket.gethostbyname(server)}:{port}"
+        logging.debug(f"checking for ssh connection to [{server_addr}]")
+
+        return (
+            server_addr
+            in subprocess.check_output(["ss", "-t", "state", "established"]).decode()
+        )
+    except Exception:
+        return False
+
+def main():
+    logging.info("Initial Reverse SSH Test:")
+    rssh_config = read_reverse_tunnel_config("/etc/waggle/config.ini")
+   
+    if ssh_connection_ok(rssh_config.beekeeper_server, rssh_config.beekeeper_port):
+        logging.info("Reverse SSH Connection OK")
+        return 0
+    else:
+        logging.info("Reverse SSH Connection NOT Established")
+
+    return 1
+
+if __name__ == "__main__":
+    main()

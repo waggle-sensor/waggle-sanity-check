@@ -1,0 +1,4 @@
+#!/bin/bash
+
+systemctl stop waggle-sanity-check.service || true
+systemctl disable waggle-sanity-check.service || true
