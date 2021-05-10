@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo "Node-ID Test: Test Starting Now"
+
+hostnameFile="/etc/hostname"
+nodeIDFile="/etc/waggle/node-id"
+
+if [ ! -f $hostnameFile ] || [ ! -f $nodeIDFile ]; then
+    echo "Node-ID Test: Needed Files Not Found Fail!"
+    exit 1
+fi
+
+nodeID=$(cat /etc/waggle/node-id)
+hostname=$(cat /etc/hostname)
+properHostname=$(echo "ws-nxcore-"$nodeID)
+
+if [ $properHostname == $hostname ]; then
+    echo "Node-ID Test: Node-ID set properly PASS!"
+    exit 0
+else
+    echo "Node-ID Test: Node-ID not set properly FAIL"
+    exit 1
+fi

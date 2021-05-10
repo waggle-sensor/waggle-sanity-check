@@ -1,0 +1,31 @@
+#!/bin/bash
+
+echo "Docker-K3S Overlay Test: Begin"
+
+dockerSym=$(find /var/lib/ -type l -ls | grep docker)
+racherFSym=$(find /etc/ -type l -ls | grep rancher)
+kubeletSym=$(find /var/lib/ -type l -ls | grep kubelet)
+rancherSSym=$(find /var/lib/ -type l -ls | grep rancher)
+
+if [ -z "$dockerSym" ]; then
+    echo "Docker-K3S Overlay Test: /var/lib/docker not overlayed FAIL"
+    exit 1
+fi
+
+if [ -z "$rancherFSym" ]; then
+    echo "Docker-K3S Overlay Test: /etc/rancher not overlayed FAIL"
+    exit 1  
+fi 
+
+if [ -z "$rancherSSym" ]; then
+    echo "Docker-K3S Overlay Test: /var/lib/rancher not overlayed FAIL"
+    exit 1
+fi
+  
+if [ -z "$kubeletSym" ]; then
+    echo "Docker-K3S Overlay Test: /var/lib/kubelet not overlayed FAIL"
+    exit 1
+fi  
+
+echo "Docker-K3S Overlay Test: K3S and Docker Overlayed PASS"
+exit 0
