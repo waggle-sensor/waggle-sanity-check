@@ -9,6 +9,7 @@ import configparser
 from typing import NamedTuple, Callable
 import os
 import json
+from os import path
 
 class SanityCheckConfig(NamedTuple):
     fatal_tests: str
@@ -38,11 +39,18 @@ def read_sanity_check_config(filename, section="all"):
     return SanityCheckConfig(
         fatal_tests=d.get("fatal_tests", None),
 	warning_tests=d.get("warning_tests", None),
-	check_mins=int(d.get("check_mins", 1)),
+	check_mins=int(d.get("check_mins", 60)),
 	fatal_fail_led=json.loads(d.get("fatal_fail_led", None)),
 	warning_fail_led=json.loads(d.get("warning_fail_led", None)),
 	success_led=json.loads(d.get("success_led", None)),
     )
+
+def report_sanity_metrics(testName, testExitCode, testSeverity):
+    try:
+        subprocess.check_call(["waggle-publish-metric", "sys.sanity_status." + testName, str(testExitCode), "--meta", "severity=" + testSeverity])
+    except Exception:
+        logging.warning("waggle-publish-metric not found. no metrics will be published")
+
 
 def reset_all_sanity_leds(sanity_conf):
     for led in sanity_conf.success_led:
@@ -55,15 +63,36 @@ def reset_all_sanity_leds(sanity_conf):
         subprocess.Popen( 'echo 0 > ' + led + 'brightness', shell=True, stdout=subprocess.PIPE)
 
 def set_sanity_check_led(sanity_conf, led):
+    if not led_paths_exist(sanity_conf):
+        logging.warning("LED Paths don't exist")
+        return
+    
     reset_all_sanity_leds(sanity_conf)
     for l in led:
         subprocess.Popen( 'echo 255 > ' + l + 'brightness', shell=True, stdout=subprocess.PIPE)
 
-def execute_tests_in_path(tests_dir):
+def led_paths_exist(sanity_config):
+    success_paths = True
+    warning_paths = True
+    fatal_paths = True
+
+    for led in sanity_config.success_led:
+        success_paths = success_paths and path.exists(led)
+
+    for led in sanity_config.warning_fail_led:
+        warning_paths = warning_paths and path.exists(led)
+
+    for led in sanity_config.fatal_fail_led:
+        fatal_paths = fatal_paths and path.exists(led)
+
+    return fatal_paths and success_paths and warning_paths
+
+def execute_tests_in_path(tests_dir, tests_severity):
     led_set = False
     totalTests = 0
     totalFailed = 0
-    
+    testsFailed = []
+
     logging.info(f"Executing Tests in Dir: {tests_dir}")
     for filename in os.listdir(tests_dir):    
         if filename.endswith(".test"):
@@ -73,12 +102,14 @@ def execute_tests_in_path(tests_dir):
             test_path = tests_dir+filename
             test_failed = subprocess.call(test_path)
             logging.info(f"test produced result: {test_failed}")
-            
+            report_sanity_metrics(filename[:-5], test_failed, tests_severity) 
+
             if test_failed:
+                testsFailed.append((filename[:-5], test_failed))
                 totalFailed+=1
                 led_set = True
 
-    return led_set, totalTests, totalFailed
+    return led_set, totalTests, totalFailed, testsFailed
 
 def update_systemd_watchdog():
     try:
@@ -89,37 +120,48 @@ def update_systemd_watchdog():
 def main():
     logging.basicConfig(level=logging.INFO)
     sanity_config = read_sanity_check_config("/etc/waggle/sanity/config.ini")
+    
+    # update software watchdog
+    update_systemd_watchdog()
 
     while True:
-        # update software watchdog
-        update_systemd_watchdog()
-       
         #run through plugins here
         logging.info("Executing Warning Tests")
-        warning_led_set, totalNumWarnTests, numberOfWarnTestsFailed = execute_tests_in_path(sanity_config.warning_tests)
+        warning_led_set, totalNumWarnTests, numberOfWarnTestsFailed, warningTestsFailed = execute_tests_in_path(sanity_config.warning_tests, "warning")
         
         logging.info("Warning Tests Complete")
         logging.info("Executing Fatal Tests")
 
-        fatal_led_set, totalNumFatalTests, numberOfFatalTestsFailed = execute_tests_in_path(sanity_config.fatal_tests)
+        fatal_led_set, totalNumFatalTests, numberOfFatalTestsFailed, fatalTestsFailed = execute_tests_in_path(sanity_config.fatal_tests, "fatal")
 
-        logging.info("Fatal Tests Complete")
+        logging.info("Fatal Tests Complete\n")
         
-        logging.info("Statistics:\n")
-        logging.info(f"Out of {totalNumWarnTests} warning tests {numberOfWarnTestsFailed} failed")
-        logging.info(f"Out of {totalNumFatalTests} warning tests {numberOfFatalTestsFailed} failed")
-        
+        logging.info("Test Resuslts:")
+        logging.info(f"Warning [{totalNumWarnTests-numberOfWarnTestsFailed} | {totalNumWarnTests}]: {str(warningTestsFailed)}")
+        logging.info(f"Fatal   [{totalNumFatalTests-numberOfFatalTestsFailed} | {totalNumFatalTests}]: {str(fatalTestsFailed)}\n")
+
         if not (fatal_led_set or warning_led_set):
             logging.info(f"All Tests Passed, setting led to {sanity_config.success_led}")
+            logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
             set_sanity_check_led(sanity_config, sanity_config.success_led)
         elif not fatal_led_set:
             logging.info(f"Only Warning Tests Failed, setting led to {sanity_config.warning_fail_led}")
+            logging.info(f"Going to sleep for 1 min, please fix issues\n")
             set_sanity_check_led(sanity_config, sanity_config.warning_fail_led)
         else:
             logging.info(f"Fatal Test Failed, setting led to {sanity_config.fatal_fail_led}")
+            logging.info(f"Going to sleep for 1 min, please fix issues\n")
             set_sanity_check_led(sanity_config, sanity_config.fatal_fail_led)
- 
-        time.sleep(sanity_config.check_mins*60)
+
+        minutesSlept = 0
+        while True:
+            time.sleep(60)
+            minutesSlept += 1
+            # update software watchdog
+            update_systemd_watchdog()
+
+            if (minutesSlept == sanity_config.check_mins or fatal_led_set or warning_led_set):
+                break
 
 if __name__ == "__main__":
     main()
