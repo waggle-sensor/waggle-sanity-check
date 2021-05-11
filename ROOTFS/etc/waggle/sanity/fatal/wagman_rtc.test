@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Test the Wagman RTC
+i2cpath=/sys/bus/i2c/devices/11-006f/rtc
+driver="mcp7941x"
+
+if [ ! -d $i2cpath ]; then
+	echo "Error: Wagman RTC not found [$i2cpath]"
+	exit 1
+fi
+rtc=$(ls $i2cpath)
+
+if [ $(cat $i2cpath/$rtc/name) != "$driver" ]; then
+	echo "Error: Wagman RTC driver name doesn't match [$driver]"
+	exit 2
+fi
+
+if ! hwclock -f /dev/$rtc; then
+	echo "Error: Wagman RTC date/time check failed"
+	exit 3
+fi
+exit 0
