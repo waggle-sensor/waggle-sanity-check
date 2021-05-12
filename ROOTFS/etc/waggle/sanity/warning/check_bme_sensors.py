@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import time
 
 # NOTE(sean) The main doc on the iio (Industrial I/O) /sys tree was here:
 # https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-bus-iio
@@ -54,10 +55,24 @@ def valid_rel_humidity(x):
     return 0.0 <= x <= 100.0
 
 
+# robust_read attempts to read 3 times to address corner case where driver fails
+def robust_read(path):
+    for _ in range(3):
+        try:
+            return path.read_text()
+        except OSError:
+            time.sleep(3)
+    raise OSError(f"unable to read path {path}")
+
+
+def read_float(path):
+    return float(robust_read(path))
+
+
 def handle_bme280(path):
-    temp = float(Path(path, "in_temp_input").read_text()) * (1/1000)
-    press = float(Path(path, "in_pressure_input").read_text()) * 100
-    hum = float(Path(path, "in_humidityrelative_input").read_text()) * (1/1000)
+    temp = read_float(path/"in_temp_input") * (1/1000)
+    press = read_float(path/"in_pressure_input") * 100
+    hum = read_float(path/"in_humidityrelative_input") * (1/1000)
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
@@ -66,9 +81,9 @@ def handle_bme280(path):
 
 def handle_bme680(path):
     # TODO need to check / calibrate conversion weights
-    temp = float(Path(path, "in_temp_input").read_text()) * (1/1000)
-    press = float(Path(path, "in_pressure_input").read_text()) * 100
-    hum = float(Path(path, "in_humidityrelative_input").read_text()) * (1/1000)
+    temp = read_float(path/"in_temp_input") * (1/1000)
+    press = read_float(path/"in_pressure_input") * 100
+    hum = read_float(path/"in_humidityrelative_input") * (1/1000)
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)

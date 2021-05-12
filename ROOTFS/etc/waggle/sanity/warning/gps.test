@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! timeout 15 grep -q -m 1 GPGGA /dev/gps; then
+    echo "GPS Test: FAIL"
+    exit 1
+fi
+
+echo "GPS Test: PASS"

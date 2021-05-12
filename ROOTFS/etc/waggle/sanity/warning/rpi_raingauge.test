@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd $(dirname $0)
+
+if ! resp=$(ssh rpi bash -s < rpi_check_raingauge_payload.sh); then
+    echo "Rain Gauge Test: ${resp} FAIL"
+    exit $?
+fi
+
+echo "Rain Gauge Test: PASS"
