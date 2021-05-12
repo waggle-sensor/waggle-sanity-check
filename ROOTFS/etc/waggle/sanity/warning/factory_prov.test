@@ -1,10 +1,10 @@
 #!/bin/bash
-echo "Factory Provision Test:"
+echo "Factory Provision Test: Begin"
 
 if cat /etc/waggle/factory_provision | grep -q "Waggle Factory Provisioning Finish"; then
-    echo "Factory Provisioning has completed successfully"
+    echo "Factory Provision Test: Factory Provisioning has completed successfully PASS"
     exit 0
 fi
 
-echo "Error: Factory Provisioning NOT completed successfully"
+echo "Factory Provision Test: Factory Provisioning NOT completed successfully FAIL"
 exit 1

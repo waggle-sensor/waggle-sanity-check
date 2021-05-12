@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "RPi K3S Node Test: Begin"
+
+# read the system manifest to see if this system is to have a Stevenson Shield
+if cat  /etc/waggle/node-manifest.json | jq .shield.present | grep -q false; then
+    echo "RPi K3S Node Test: Stevenson Shield not installed in this node, assume PASS"
+    exit 0
+fi
+
+if timeout 30s kubectl get nodes --request-timeout='30s' | grep ws-rpi | grep -q Ready; then
+    echo "RPi K3S Node Test: RPi configured and ready as K3S agent PASS"
+    exit 0
+fi
+
+echo "RPi K3S Node Test: No RPi configured as K3S agent FAIL"
+exit 1

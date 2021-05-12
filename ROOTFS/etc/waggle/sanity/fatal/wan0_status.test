@@ -1,4 +1,5 @@
 #!/bin/bash
 
+echo "Wan0 Status Test: Begin"
 # use connectivity helper function
 /etc/waggle/sanity/_helper/connectivity_status.test wan0

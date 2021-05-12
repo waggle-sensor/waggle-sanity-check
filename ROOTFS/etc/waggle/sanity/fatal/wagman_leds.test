@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Wagman LEDs Test: Begin"
 # Test the Wagman LEDs
 leds=(
 	"/sys/class/leds/wm-blue1"
@@ -16,7 +17,7 @@ leds=(
 # attempt to find the LED paths to see if they exist
 for led in "${leds[@]}"; do
 	if [ ! -d $led ]; then
-		echo "Error: Wagman LED [$led] not found"
+		echo "Wagman LEDs Test: Wagman LED [$led] not found FAIL"
 		exit 1
 	fi
 done
@@ -24,8 +25,10 @@ done
 # driver logs errors on failed brightness writes, search log for any errors
 for led in "${leds[@]}"; do
 	if journalctl -b0 --no-pager | grep -m1 "leds $(basename $led): Setting an LED's brightness failed"; then
-		echo "Error: Wagman LED [$led] prior set brightness failure detected"
+		echo "Wagman LEDs Test: Wagman LED [$led] prior set brightness failure detected FAIL"
 		exit 2
 	fi
 done
+
+echo "Wagman LEDs Test: PASS"
 exit 0

@@ -18,6 +18,7 @@ class SanityCheckConfig(NamedTuple):
     warning_fail_led: list
     fatal_fail_led: list
     success_led: list
+    timeout_secs: int
 
 def read_config_section_dict(filename, section):
     config = configparser.ConfigParser()
@@ -43,6 +44,7 @@ def read_sanity_check_config(filename, section="all"):
 	fatal_fail_led=json.loads(d.get("fatal_fail_led", None)),
 	warning_fail_led=json.loads(d.get("warning_fail_led", None)),
 	success_led=json.loads(d.get("success_led", None)),
+        timeout_secs=int(d.get("timeout_secs", 60)),
     )
 
 def report_sanity_metrics(testName, testExitCode, testSeverity):
@@ -87,7 +89,7 @@ def led_paths_exist(sanity_config):
 
     return fatal_paths and success_paths and warning_paths
 
-def execute_tests_in_path(tests_dir, tests_severity):
+def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
     led_set = False
     totalTests = 0
     totalFailed = 0
@@ -100,7 +102,13 @@ def execute_tests_in_path(tests_dir, tests_severity):
 
             logging.info(f"executing test {filename}")
             test_path = tests_dir+filename
-            test_failed = subprocess.call(test_path)
+            
+            try:
+                test_failed = subprocess.call(test_path, timeout=timeout_secs)
+            except Exception:
+                logging.info(f"Timed out while executing {filename} after {timeout_secs} seconds")
+                test_failed = 127
+
             logging.info(f"test produced result: {test_failed}")
             report_sanity_metrics(filename[:-5], test_failed, tests_severity) 
 
@@ -109,6 +117,8 @@ def execute_tests_in_path(tests_dir, tests_severity):
                 totalFailed+=1
                 led_set = True
 
+    # pet systemd watchdog
+    update_systemd_watchdog() 
     return led_set, totalTests, totalFailed, testsFailed
 
 def update_systemd_watchdog():
@@ -127,12 +137,12 @@ def main():
     while True:
         #run through plugins here
         logging.info("Executing Warning Tests")
-        warning_led_set, totalNumWarnTests, numberOfWarnTestsFailed, warningTestsFailed = execute_tests_in_path(sanity_config.warning_tests, "warning")
+        warning_led_set, totalNumWarnTests, numberOfWarnTestsFailed, warningTestsFailed = execute_tests_in_path(sanity_config.warning_tests, "warning", sanity_config.timeout_secs)
         
         logging.info("Warning Tests Complete")
         logging.info("Executing Fatal Tests")
 
-        fatal_led_set, totalNumFatalTests, numberOfFatalTestsFailed, fatalTestsFailed = execute_tests_in_path(sanity_config.fatal_tests, "fatal")
+        fatal_led_set, totalNumFatalTests, numberOfFatalTestsFailed, fatalTestsFailed = execute_tests_in_path(sanity_config.fatal_tests, "fatal", sanity_config.timeout_secs)
 
         logging.info("Fatal Tests Complete\n")
         
@@ -142,16 +152,15 @@ def main():
 
         if not (fatal_led_set or warning_led_set):
             logging.info(f"All Tests Passed, setting led to {sanity_config.success_led}")
-            logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
             set_sanity_check_led(sanity_config, sanity_config.success_led)
         elif not fatal_led_set:
             logging.info(f"Only Warning Tests Failed, setting led to {sanity_config.warning_fail_led}")
-            logging.info(f"Going to sleep for 1 min, please fix issues\n")
             set_sanity_check_led(sanity_config, sanity_config.warning_fail_led)
         else:
             logging.info(f"Fatal Test Failed, setting led to {sanity_config.fatal_fail_led}")
-            logging.info(f"Going to sleep for 1 min, please fix issues\n")
             set_sanity_check_led(sanity_config, sanity_config.fatal_fail_led)
+
+        logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
 
         minutesSlept = 0
         while True:
@@ -160,7 +169,7 @@ def main():
             # update software watchdog
             update_systemd_watchdog()
 
-            if (minutesSlept == sanity_config.check_mins or fatal_led_set or warning_led_set):
+            if (minutesSlept >= sanity_config.check_mins):
                 break
 
 if __name__ == "__main__":

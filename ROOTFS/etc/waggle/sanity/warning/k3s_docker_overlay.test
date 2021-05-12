@@ -14,17 +14,17 @@ fi
 
 if [ -z "$rancherFSym" ]; then
     echo "Docker-K3S Overlay Test: /etc/rancher not overlayed FAIL"
-    exit 1  
+    exit 2 
 fi 
 
 if [ -z "$rancherSSym" ]; then
     echo "Docker-K3S Overlay Test: /var/lib/rancher not overlayed FAIL"
-    exit 1
+    exit 3
 fi
   
 if [ -z "$kubeletSym" ]; then
     echo "Docker-K3S Overlay Test: /var/lib/kubelet not overlayed FAIL"
-    exit 1
+    exit 4
 fi  
 
 echo "Docker-K3S Overlay Test: K3S and Docker Overlayed PASS"

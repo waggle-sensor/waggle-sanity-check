@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "RPi BME680 Test: Begin"
 cd $(dirname $0)
 
 # TODO(sean) detect rpi addr

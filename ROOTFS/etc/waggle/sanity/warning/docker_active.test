@@ -1,3 +1,4 @@
 #!/bin/bash
 
-systemctl is-active docker
+echo "Docker Active Test: Begin"
+systemctl -q is-active docker

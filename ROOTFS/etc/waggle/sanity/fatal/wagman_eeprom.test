@@ -1,30 +1,33 @@
 #!/bin/bash
 
+echo "Wagman EEPROM Test: Begin"
 # Test the Wagman EEPROM
 i2cpath=/sys/bus/i2c/devices/11-0050
 driver="24c256"
 size=32768
 
 if [ ! -d $i2cpath ]; then
-	echo "Error: Wagman EEPROM not found [$i2cpath]"
+	echo "Wagman EEPROM Test: Wagman EEPROM not found [$i2cpath] FAIL"
 	exit 1
 fi
 
 if [ $(cat $i2cpath/name) != "$driver" ]; then
-	echo "Error: Wagman EEPROM driver name doesn't match [$driver]"
+	echo "Wagman EEPROM Test: Wagman EEPROM driver name doesn't match [$driver] FAIL"
 	exit 2
 fi
 
 # ensure can read all and the nvmem size is correct
 cat $i2cpath/eeprom > /dev/null
 if [ $? -ne 0 ]; then
-	echo "Error: Wagman EEPROM read failed"
+	echo "Wagman EEPROM Test: Wagman EEPROM read FAIL"
 	exit 3
 fi
 
 nvm_size=$(wc -c $i2cpath/eeprom | awk '{print $1}')
 if [ $nvm_size -ne $size ]; then
-	echo "Error: Wagman EEPROM size [$nvm_size] does not match expected [$size]"
+	echo "Wagman EEPROM Test: Wagman EEPROM size [$nvm_size] does not match expected [$size] FAIL"
 	exit 4
 fi
+
+echo "Wagman EEPROM Test: PASS"
 exit 0
