@@ -2,9 +2,8 @@
 
 cd $(dirname $0)
 
-if ! resp=$(ssh rpi bash -s < rpi_check_raingauge_payload.sh); then
-    echo "Rain Gauge Test: ${resp} FAIL"
-    exit $?
+if ! ssh rpi 'ls /dev/serial/by-id/*FTDI_FT232R*'; then
+    echo "Rain Gauge Test: device not found FAIL"
 fi
 
 echo "Rain Gauge Test: PASS"
