@@ -88,6 +88,7 @@ def main():
             handler = handlers[name]
         except KeyError:
             print("skipping", name, file=sys.stderr)
+            continue
         handler(path.parent)
 
 
