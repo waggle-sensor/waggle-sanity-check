@@ -35,7 +35,7 @@ import sys
 #
 # But, from what I can tell this doesn't seem quite right across some combination
 # of the NX / RPi and BME 280 / 680 in terms of scaling factors to get right units...
-# Some of the values seem to be
+# Some of the values seem to be in odd ranges just following those scaling factors.
 #
 
 
@@ -85,9 +85,10 @@ def main():
     for path in Path("/sys/bus/iio/devices").glob("*/name"):
         name = path.read_text().strip()
         try:
-            handlers[name](path.parent)
+            handler = handlers[name]
         except KeyError:
             print("skipping", name, file=sys.stderr)
+        handler(path.parent)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd $(dirname $0)
+
+# TODO(sean) detect rpi addr
+if ssh 10.31.81.81 python3 -s < check_bme_sensors.py; then
+    echo "RPi BME680 Test: PASS"
+else
+    echo "RPi BME680 Test: FAIL"
+    exit 1
+fi
