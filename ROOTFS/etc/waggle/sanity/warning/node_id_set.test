@@ -15,8 +15,8 @@ if [ ! -f $nodeIDFile ]; then
     exit 2
 fi
 
-nodeID=$(cat /etc/waggle/node-id)
-hostname=$(cat /etc/hostname)
+nodeID=$(cat $nodeIDFile)
+hostname=$(cat $hostnameFile)
 properHostname=$(echo "ws-nxcore-"$nodeID)
 
 if [ $properHostname == $hostname ]; then
