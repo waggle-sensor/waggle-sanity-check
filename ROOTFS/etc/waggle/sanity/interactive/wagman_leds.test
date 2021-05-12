@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# Test the visible Wagman LEDs
+
+pf="Wagman LEDs Interactive Test"
+echo "$pf: Begin"
+
+led1=(
+	"/sys/class/leds/wm-blue1"
+	"/sys/class/leds/wm-green1"
+	"/sys/class/leds/wm-red1"
+)
+led2=(
+	"/sys/class/leds/wm-blue3"
+	"/sys/class/leds/wm-green3"
+	"/sys/class/leds/wm-red3"
+)
+
+## test if the LED path exists, exit on failure
+exists_or_exit() {
+	led=$1
+	if [ ! -d $led ]; then
+		echo "$pf: Wagman LED [$led] not found FAIL"
+		exit 1
+	fi
+}
+
+## turn off the LED (set RGB all to 0)
+turn_off() {
+	leds=("$@")
+	for led in "${leds[@]}"; do
+	  exists_or_exit "$led"
+
+		echo 0 > $led/brightness
+	  echo none > $led/trigger
+	done
+}
+
+prompt() {
+	msg=$1
+	while true; do
+		read -n 1 -p "$pf: $msg (y/n)? " resp
+		echo
+		if [ "$resp" == "y" ]; then
+			return 0
+		elif [ "$resp" == "n" ]; then
+			return 1
+		fi
+	done
+}
+
+## test that a color works
+color_test() {
+	led=$1
+	color=$2
+	success=0
+
+	echo 255 > ${led}/brightness
+ 	if ! prompt "is LED $color"; then
+		success=1
+	fi
+	echo 0 > ${led}/brightness
+
+	return $success
+}
+
+# initialize all the LEDs to off
+echo "$pf: turn off LED 1"
+turn_off "${led1[@]}"
+
+echo "$pf: turn off LED 2"
+turn_off "${led2[@]}"
+
+echo
+echo "$pf: test colors for LED 1"
+if ! color_test "${led1[0]}" "BLUE"; then
+	echo "$pf: BLUE LED 1 FAIL"
+	exit 10
+fi
+if ! color_test "${led1[1]}" "GREEN"; then
+	echo "$pf: GREEN LED 1 FAIL"
+	exit 11
+fi
+if ! color_test "${led1[2]}" "RED"; then
+	echo "$pf: RED LED 1 FAIL"
+	exit 12
+fi
+
+echo
+echo "$pf: test colors for LED 2"
+if ! color_test "${led2[0]}" "BLUE"; then
+	echo "$pf: BLUE LED 2 FAIL"
+	exit 20
+fi
+if ! color_test "${led2[1]}" "GREEN"; then
+	echo "$pf: GREEN LED 2 FAIL"
+	exit 21
+fi
+if ! color_test "${led2[2]}" "RED"; then
+	echo "$pf: RED LED 2 FAIL"
+	exit 22
+fi
+
+echo "$pf: PASS"
