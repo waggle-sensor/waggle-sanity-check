@@ -2,9 +2,9 @@
 
 cd $(dirname $0)
 
-if python3 check_bme_sensors.py; then
-    echo "Wagman BME280 Test: PASS"
-else
+if ! python3 check_bme_sensors.py; then
     echo "Wagman BME280 Test: FAIL"
     exit 1
 fi
+
+echo "Wagman BME280 Test: PASS"
