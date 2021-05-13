@@ -1,0 +1,185 @@
+#!/bin/bash
+
+# Test the power-supply control works
+
+pf="Power Supply Control Interactive Test"
+echo "$pf: Begin"
+
+ep_supply=
+if cat /etc/waggle/node-manifest.json | jq .psu.ep_supply.present | grep -q true; then
+	echo "$pf: testing EP supply"
+	ep_supply=1
+else
+	echo "$pf: SKIPPING testing EP supply (not installed)"
+fi
+
+ph_supply=
+if cat /etc/waggle/node-manifest.json | jq .psu.ph_supply.present | grep -q true; then
+	echo "$pf: testing PH supply"
+	ph_supply=1
+else
+	echo "$pf: SKIPPING testing PH supply (not installed)"
+fi
+
+gpiopath="/sys/class/gpio"
+
+gpio_high() {
+	gpio=$1
+	if [ ! -f  $gpiopath/gpio$gpio/value ]; then
+		echo "$pf: GPIO [$gpio] value check FAIL"
+		exit 1
+	fi
+
+	if [ $(cat $gpiopath/gpio$gpio/value) -eq 1 ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# get the list of GPIOs for PSU status
+acok=$(waggle-get-config -s wagman -k gpio-acok3)
+pg1=$(waggle-get-config -s wagman -k gpio-pg1)
+pg2=$(waggle-get-config -s wagman -k gpio-pg2)
+pg3=$(waggle-get-config -s wagman -k gpio-pg3)
+pg4=$(waggle-get-config -s wagman -k gpio-pg4)
+
+gpio_cleanup()
+{
+	if [ -d $gpiopath/gpio$acok ]; then
+		echo $acok > $gpiopath/unexport
+	fi
+	if [ -d $gpiopath/gpio$pg1 ]; then
+		echo $pg1 > $gpiopath/unexport
+	fi
+	if [ -d $gpiopath/gpio$pg2 ]; then
+		echo $pg2 > $gpiopath/unexport
+	fi
+	if [ -d $gpiopath/gpio$pg3 ]; then
+		echo $pg3 > $gpiopath/unexport
+	fi
+	if [ -d $gpiopath/gpio$pg4 ]; then
+		echo $pg4 > $gpiopath/unexport
+	fi
+}
+trap gpio_cleanup EXIT
+
+# export the GPIOs and set to input
+if [ ! -d $gpiopath/gpio$acok ]; then
+	echo $acok > $gpiopath/export
+fi
+echo "in" > $gpiopath/gpio$acok/direction
+if [ ! -d $gpiopath/gpio$pg1 ]; then
+	echo $pg1 > $gpiopath/export
+fi
+echo "in" > $gpiopath/gpio$pg1/direction
+if [ ! -d $gpiopath/gpio$pg2 ]; then
+	echo $pg2 > $gpiopath/export
+fi
+echo "in" > $gpiopath/gpio$pg2/direction
+if [ ! -d $gpiopath/gpio$pg3 ]; then
+	echo $pg3 > $gpiopath/export
+fi
+echo "in" > $gpiopath/gpio$pg3/direction
+if [ ! -d $gpiopath/gpio$pg4 ]; then
+	echo $pg4 > $gpiopath/export
+fi
+echo "in" > $gpiopath/gpio$pg4/direction
+
+# check that the PSU is reporting AC okay
+echo "$pf: testing PSU ACOK"
+if ! gpio_high $acok; then
+	echo "$pf: PSU ACOK FAIL"
+	exit 10
+fi
+
+# set the power supply to EP off, PH on and validate
+echo "$pf: testing EP:off | EP:on"
+waggle-set-psu-state off on
+sleep 2s
+if ! gpio_high $acok; then
+	echo "$pf: EP:off | EP:on - ACOK (high) FAIL"
+	exit 20
+fi
+if ! gpio_high $pg1; then
+	echo "$pf: EP:off | EP:on - PG1 (high) FAIL"
+	exit 21
+fi
+if [ -n "$ep_supply" ]; then
+	if gpio_high $pg2; then
+		echo "$pf: EP:off | EP:on - PG2 (low) FAIL"
+		exit 22
+	fi
+fi
+if [ -n "$ph_supply" ]; then
+	if ! gpio_high $pg3; then
+		echo "$pf: EP:off | EP:on - PG3 (high) FAIL"
+		exit 23
+	fi
+	if ! gpio_high $pg4; then
+		echo "$pf: EP:off | EP:on - PG4 (high) FAIL"
+		exit 24
+	fi
+fi
+sleep 2s
+
+# set the power supply to EP off, PH off and validate
+echo "$pf: testing EP:off | EP:off"
+waggle-set-psu-state off off
+sleep 2s
+if ! gpio_high $acok; then
+	echo "$pf: EP:off | EP:off - ACOK (high) FAIL"
+	exit 30
+fi
+if ! gpio_high $pg1; then
+	echo "$pf: EP:off | EP:off - PG1 (high) FAIL"
+	exit 31
+fi
+if [ -n "$ep_supply" ]; then
+	if gpio_high $pg2; then
+		echo "$pf: EP:off | EP:off - PG2 (low) FAIL"
+		exit 32
+	fi
+fi
+if [ -n "$ph_supply" ]; then
+	if gpio_high $pg3; then
+		echo "$pf: EP:off | EP:off - PG3 (low) FAIL"
+		exit 33
+	fi
+	if gpio_high $pg4; then
+		echo "$pf: EP:off | EP:off - PG4 (low) FAIL"
+		exit 34
+	fi
+fi
+sleep 2s
+
+# set the power supply to EP on, PH on and validate
+echo "$pf: testing EP:on | EP:on"
+waggle-set-psu-state on on
+sleep 2s
+if ! gpio_high $acok; then
+	echo "$pf: EP:on | EP:on - ACOK (high) FAIL"
+	exit 40
+fi
+if ! gpio_high $pg1; then
+	echo "$pf: EP:on | EP:on - PG1 (high) FAIL"
+	exit 41
+fi
+if [ -n "$ep_supply" ]; then
+	if ! gpio_high $pg2; then
+		echo "$pf: EP:on | EP:on - PG2 (high) FAIL"
+		exit 42
+	fi
+fi
+if [ -n "$ph_supply" ]; then
+	if ! gpio_high $pg3; then
+		echo "$pf: EP:on | EP:on - PG3 (high) FAIL"
+		exit 43
+	fi
+	if ! gpio_high $pg4; then
+		echo "$pf: EP:on | EP:on - PG4 (high) FAIL"
+		exit 44
+	fi
+fi
+
+echo "$pf: PASS"
