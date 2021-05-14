@@ -25,7 +25,7 @@ import time
 # Description:
 # 		Scaled pressure measurement from channel Y, in kilopascal.
 #
-# => so, should mul by 100 to get pascals.
+# => so, should mul by 1000 to get pascals.
 #
 # What:		/sys/bus/iio/devices/iio:deviceX/in_humidityrelative_input
 # KernelVersion:	3.14
@@ -72,7 +72,7 @@ def read_float(path):
 
 def handle_bme280(path):
     temp = read_float(path/"in_temp_input") * (1/1000)
-    press = read_float(path/"in_pressure_input") * 100
+    press = read_float(path/"in_pressure_input") * 1000
     hum = read_float(path/"in_humidityrelative_input") * (1/1000)
     print(f"bme280 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
@@ -83,7 +83,7 @@ def handle_bme280(path):
 def handle_bme680(path):
     # TODO need to check / calibrate conversion weights
     temp = read_float(path/"in_temp_input") * (1/1000)
-    press = read_float(path/"in_pressure_input") * 100
+    press = read_float(path/"in_pressure_input") * 1000
     hum = read_float(path/"in_humidityrelative_input") * (1/1000)
     print(f"bm680 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
