@@ -8,7 +8,7 @@ if [ -z "${INTF}" ]; then
 fi
 
 # read the system manifest to see if this system is setup for $INTF connectivity
-if cat  /etc/waggle/node-manifest.json | jq .connectivity.$INTF.present | grep -q false; then
+if cat /etc/waggle/node_manifest.json | jq .connectivity.$INTF.present | grep -q false; then
     echo "$INTF connectivity not configured for this node, assume pass"
     exit 0
 fi
