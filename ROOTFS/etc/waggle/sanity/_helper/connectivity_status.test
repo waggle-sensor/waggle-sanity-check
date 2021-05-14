@@ -18,9 +18,12 @@ if [ ! -f /sys/class/net/$INTF/operstate ]; then
     exit 3
 fi
 
-if cat /sys/class/net/$INTF/operstate | grep -q "up"; then
-    exit 0
+if ! cat /sys/class/net/$INTF/operstate | grep -q -e "up" -e "unknown"; then
+    echo "Error: $INTF is not 'up' or 'unkonwn'"
+    exit 4
 fi
 
-echo "Error: $INTF connectivity not 'up'"
-exit 1
+if ! ip a show $INTF | grep -q inet; then
+  echo "Error: $INTF does not have an IP address"
+  exit 5
+fi
