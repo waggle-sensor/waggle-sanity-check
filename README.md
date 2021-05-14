@@ -1,1 +1,1 @@
-# waggle-network-watchdog
+# waggle-sanity-check

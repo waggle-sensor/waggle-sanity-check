@@ -3,7 +3,7 @@
 echo "Docker-K3S Overlay Test: Begin"
 
 dockerSym=$(find /var/lib/ -type l -ls | grep docker)
-racherFSym=$(find /etc/ -type l -ls | grep rancher)
+rancherFSym=$(find /etc/ -type l -ls | grep rancher)
 kubeletSym=$(find /var/lib/ -type l -ls | grep kubelet)
 rancherSSym=$(find /var/lib/ -type l -ls | grep rancher)
 
