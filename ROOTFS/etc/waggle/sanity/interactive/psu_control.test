@@ -6,7 +6,7 @@ pf="Power Supply Control Interactive Test"
 echo "$pf: Begin"
 
 ep_supply=
-if cat /etc/waggle/node-manifest.json | jq .psu.ep_supply.present | grep -q true; then
+if cat /etc/waggle/node_manifest.json | jq .psu.ep_supply.present | grep -q true; then
 	echo "$pf: testing EP supply"
 	ep_supply=1
 else
@@ -14,7 +14,7 @@ else
 fi
 
 ph_supply=
-if cat /etc/waggle/node-manifest.json | jq .psu.ph_supply.present | grep -q true; then
+if cat /etc/waggle/node_manifest.json | jq .psu.ph_supply.present | grep -q true; then
 	echo "$pf: testing PH supply"
 	ph_supply=1
 else

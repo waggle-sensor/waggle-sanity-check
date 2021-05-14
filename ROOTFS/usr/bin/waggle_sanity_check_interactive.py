@@ -65,7 +65,7 @@ def report_sanity_metrics(testName, testExitCode, testSeverity):
         logging.warning("waggle-publish-metric not found. no metrics will be published")
 
 
-def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
+def execute_tests_in_path(tests_dir, tests_severity):
     totalTests = 0
     totalFailed = 0
     testsFailed = []
@@ -103,7 +103,7 @@ def main():
 
     logging.info("Test Resuslts:")
     logging.info(
-        f"Interactive [{totalNumInteractiveTests-numberOfInteractiveTestsFailed} | {totalNumInteractiveTests}]: {str(interactiveTestsFailed)}"
+        f"Interactive [{totalInteractiveTests-numberOfInteractiveTestsFailed} | {totalInteractiveTests}]: {str(interactiveTestsFailed)}"
     )
 
 
