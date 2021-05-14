@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from pathlib import Path
 import sys
 import time
@@ -73,10 +74,10 @@ def handle_bme280(path):
     temp = read_float(path/"in_temp_input") * (1/1000)
     press = read_float(path/"in_pressure_input") * 100
     hum = read_float(path/"in_humidityrelative_input") * (1/1000)
+    print(f"bme280 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
-    print(f"bme280 temp={temp} C press={press} Pa hum={hum} %RH")
 
 
 def handle_bme680(path):
@@ -84,10 +85,10 @@ def handle_bme680(path):
     temp = read_float(path/"in_temp_input") * (1/1000)
     press = read_float(path/"in_pressure_input") * 100
     hum = read_float(path/"in_humidityrelative_input") * (1/1000)
+    print(f"bm680 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
-    print(f"bm680 temp={temp} C press={press} Pa hum={hum} %RH")
 
 
 handlers = {
