@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if jq .shield.present /etc/waggle/node_manifest.json | grep -q false; then
+    echo "RPi Rain Gauge Test: Stevenson Shield not installed in this node, assume PASS"
+    exit 0
+fi
+
 cd $(dirname $0)
 
 if ! resp=$(ssh rpi bash -s < rpi_check_raingauge_payload.sh); then
