@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! ssh rpi lsusb | grep -q 0d8c:0014; then
+    echo "RPi Mic Test: device not found FAIL"
+    exit 1
+fi
+
+echo "RPi Mic Test: PASS"
