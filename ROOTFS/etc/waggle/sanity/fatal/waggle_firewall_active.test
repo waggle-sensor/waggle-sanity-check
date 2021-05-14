@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Waggle Firewall Active Test: Executing"
+
+systemctl -q is-active waggle-firewall

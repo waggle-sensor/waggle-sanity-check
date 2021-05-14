@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "Reverse SSH Access Test: Begin"
+connectionStatus=$(journalctl -b0 --no-pager | tac | grep -m1 -e 'no connection for' -e 'connection ok')
+
+if [[ $connectionStatus == *"connection ok"* ]]; then
+    echo "Reverse SSH Access Test: reverse ssh access ok, PASS"
+    exit 0
+fi
+
+echo "Reverse SSH Access Test: no reverse ssh access, FAIL"
+exit 1

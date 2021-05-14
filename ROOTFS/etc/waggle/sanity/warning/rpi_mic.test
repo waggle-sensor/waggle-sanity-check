@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if jq .shield.present /etc/waggle/node_manifest.json | grep -q false; then
+    echo "RPi Mic Test: Stevenson Shield not installed in this node, assume PASS"
+    exit 0
+fi
+
+if ! ssh rpi lsusb | grep -q 0d8c:0014; then
+    echo "RPi Mic Test: device not found FAIL"
+    exit 1
+fi
+
+echo "RPi Mic Test: PASS"

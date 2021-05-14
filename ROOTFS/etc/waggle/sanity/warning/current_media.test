@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "Current Media Test: Begin"
+
+currentMedia=$(nvbootctrl get-current-slot)
+echo "Current Media Test: current media = $currentMedia"
+
+exit $currentMedia 

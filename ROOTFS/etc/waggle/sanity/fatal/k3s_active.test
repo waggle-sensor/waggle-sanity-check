@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "K3S Active Test: Begin"
+
+systemctl -q is-active k3s

@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Waggle Network Watchdog Active Test: Begin"
+
+systemctl -q is-active waggle-network-watchdog

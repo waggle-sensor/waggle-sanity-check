@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Waggle Reverse Tunnel Active Test: Begin"
+
+systemctl -q is-active waggle-bk-reverse-tunnel

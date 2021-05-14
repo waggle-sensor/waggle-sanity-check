@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Test the visible exterior power led
+
+pf="Power LED Interactive Test"
+echo "$pf: Begin"
+
+prompt() {
+	msg=$1
+	while true; do
+		read -n 1 -p "$pf: $msg (y/n)? " resp
+		echo
+		if [ "$resp" == "y" ]; then
+			return 0
+		elif [ "$resp" == "n" ]; then
+			return 1
+		fi
+	done
+}
+
+if ! prompt "is RED power LED on"; then
+	echo "$pf: RED power LED FAIL"
+	exit 1
+fi
+
+echo "$pf: PASS"
