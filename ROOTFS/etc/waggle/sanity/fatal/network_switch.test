@@ -1,0 +1,38 @@
+#!/bin/bash
+
+repeat() {
+    n=$1
+    shift
+    for _ in $(seq $n); do
+        $*
+        sleep 0.1
+    done
+}
+
+if ! dev=$(ls /dev/serial/by-id/usb-FTDI* | head -n 1); then
+    echo "Network Switch Test: no serial console found FAIL"
+    exit 1
+fi
+
+# setup serial so we can interact with standard io tools
+stty -F $dev 115200 brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -echo min 100 time 2
+
+# the network switch may be in an unknown state at test time. we use a brute
+# force approach here of just asking to logout a bunch to reach a known state,
+# then attempt to login a bunch and finally request show hardware a few times.
+#
+# NOTE(sean) is anyone changes the password to be different from the username,
+# this will fail and require more intellegence to estimate the current state.
+repeat 6 echo "logout" > "$dev"
+repeat 6 echo "ubnt" > "$dev"
+repeat 3 echo "show hardware" > "$dev"
+
+if ! timeout 10 grep -i -m 1 "software version" "$dev"; then
+    echo "Network Switch Test: could not detect version FAIL"
+    exit 1
+fi
+
+# attempt but don't check for logout
+echo logout > $dev
+
+echo "Network Switch Test: PASS"

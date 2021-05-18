@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# NOTE(sean)
+# the test is designed to be a "rolling 2h window" check for dmesg logs. it assumes the
+# sanity test suite is run every hour.
+# -k is kernel logs ~ dmesg
+# -p 4 is warning level entries
+if journalctl -q -k -p 4 --since -2h | grep -q .; then
+    echo "Kernel Warnings Test: FAIL"
+    exit 1
+fi
+
+echo "Kernel Warnings Test: PASS"
