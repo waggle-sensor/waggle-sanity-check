@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "Agent Present Test: Begin"
+
+expectedAgent=$(cat /etc/waggle/node_manifest.json | jq '[.nxagent | select(.present == true)] | length')
+
+if [[ $expectedAgent == 0 ]]; then
+    echo "Agent Present Test: No agent expected for this device PASS"
+    exit 0
+fi
+
+nmapOut=$(nmap -sP 10.31.81.1/24)
+actualAgent=$(echo $nmapOut | grep -o "nx-agent" | wc -l)
+
+if [[ $actualAgent == $expectedAgent ]]; then
+    echo "Agent Present Test: Expected Agent, Found Agent PASS"
+    exit 0
+fi
+
+echo "Agent Present Test: Expected Agent was $expectedAgent Found $actualAgent Agent FAIL"
+exit 1

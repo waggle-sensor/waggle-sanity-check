@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "Cameras Present Test: Begin"
+
+expectedCams=$(cat /etc/waggle/node_manifest.json | jq '[.cameras[] | select(.present == true)] | length')
+
+if [[ $expectedCams == 0 ]]; then
+    echo "Cameras Present Test: No cameras expected for this device PASS"
+    exit 0
+fi
+
+nmapOut=$(nmap -sP 10.31.81.1/24)
+actualCams=$(echo $nmapOut | egrep -o "10.31.81.1[0-9] " | wc -l)
+
+if [[ $actualCams == $expectedCams ]]; then
+    echo "Cameras Present Test: Expected cams was $expectedCams Found $actualCams Cams PASS"
+    exit 0
+fi
+
+echo "Cameras Present Test: Expected cams was $expectedCams Found $actualCams Cams FAIL"
+exit 1
