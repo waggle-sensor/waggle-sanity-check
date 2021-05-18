@@ -18,7 +18,7 @@ fi
 stty -F $dev 115200 brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -echo min 100 time 2
 
 # clear any buffered data
-timeout 3 "$dev" > /dev/null
+timeout 3 cat "$dev" > /dev/null
 
 # the network switch may be in an unknown state at test time. we use a brute
 # force approach here of just asking to logout a bunch to reach a known state,
