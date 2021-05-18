@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "RPi Present Test: Begin"
+
+expectedRPi=$(cat /etc/waggle/node_manifest.json | jq '[.shield | select(.present == true)] | length')
+
+if [[ $expectedRPi == 0 ]]; then
+    echo "RPi Present Test: No shield expected for this device PASS"
+    exit 0
+fi
+
+nmapOut=$(nmap -sP 10.31.81.1/24)
+actualRPi=$(echo $nmapOut | grep -o "rpi" | wc -l)
+
+if [[ $actualRPi == $expectedRPi ]]; then
+    echo "RPi Present Test: Expected RPi, Found RPi PASS"
+    exit 0
+fi
+
+echo "RPi Present Test: Expected RPis was $expectedRPi Found $actualRPi RPi FAIL"
+exit 1

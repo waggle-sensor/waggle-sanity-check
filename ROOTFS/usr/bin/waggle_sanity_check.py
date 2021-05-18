@@ -17,7 +17,7 @@ class SanityCheckConfig(NamedTuple):
     fatal_fail_led: list
     success_led: list
     timeout_secs: int
-
+    init_sleep_mins: int
 
 def read_config_section_dict(filename, section):
     config = configparser.ConfigParser()
@@ -45,6 +45,7 @@ def read_sanity_check_config(filename, section="all"):
         warning_fail_led=json.loads(d.get("warning_fail_led", None)),
         success_led=json.loads(d.get("success_led", None)),
         timeout_secs=int(d.get("timeout_secs", 60)),
+        init_sleep_mins=int(d.get("init_sleep_mins", 5)),
     )
 
 
@@ -150,10 +151,24 @@ def update_systemd_watchdog():
     except Exception:
         logging.warning("skipping reset of systemd watchdog")
 
+def sleep_and_pet_watchdog(mins_to_sleep):
+    minutesSlept = 0
+    while True:
+        time.sleep(60)
+        minutesSlept += 1
+        
+        # update software watchdog
+        update_systemd_watchdog()
+
+        if minutesSlept >= mins_to_sleep:
+            break
 
 def main():
     logging.basicConfig(level=logging.INFO)
     sanity_config = read_sanity_check_config("/etc/waggle/sanity/config.ini")
+
+    logging.info(f"Going to sleep for {sanity_config.init_sleep_mins} mins to allow other services to get started")
+    sleep_and_pet_watchdog(sanity_config.init_sleep_mins)
 
     # update software watchdog
     update_systemd_watchdog()
@@ -209,17 +224,7 @@ def main():
             set_sanity_check_led(sanity_config, sanity_config.fatal_fail_led)
 
         logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
-
-        minutesSlept = 0
-        while True:
-            time.sleep(60)
-            minutesSlept += 1
-            # update software watchdog
-            update_systemd_watchdog()
-
-            if minutesSlept >= sanity_config.check_mins:
-                break
-
+        sleep_and_pet_watchdog(sanity_config.check_mins)
 
 if __name__ == "__main__":
     main()
