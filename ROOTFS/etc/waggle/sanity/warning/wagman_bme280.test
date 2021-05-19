@@ -3,8 +3,14 @@
 echo "Wagman BME280 Test: Begin"
 cd $(dirname $0)
 
+if ! cat /sys/bus/iio/devices/*/name | grep -q -i bme280; then
+    # NOTE(sean) exit 2 instead of 1 to maintain consistency with old exitcode
+    echo "Wagman BME280 Test: device not found FAIL"
+    exit 2
+fi
+
 if ! python3 check_bme_sensors.py; then
-    echo "Wagman BME280 Test: FAIL"
+    echo "Wagman BME280 Test: values out of range FAIL"
     exit 1
 fi
 
