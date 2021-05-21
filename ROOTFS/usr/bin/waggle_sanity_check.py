@@ -7,7 +7,7 @@ import os
 import subprocess
 import time
 from typing import NamedTuple
-
+import ast
 
 class SanityCheckConfig(NamedTuple):
     fatal_tests: str
@@ -41,9 +41,9 @@ def read_sanity_check_config(filename, section="all"):
         fatal_tests=d.get("fatal_tests", None),
         warning_tests=d.get("warning_tests", None),
         check_mins=int(d.get("check_mins", 60)),
-        fatal_fail_led=json.loads(d.get("fatal_fail_led", None)),
-        warning_fail_led=json.loads(d.get("warning_fail_led", None)),
-        success_led=json.loads(d.get("success_led", None)),
+        fatal_fail_led=list(ast.literal_eval(d.get("fatal_fail_led",None))),
+        warning_fail_led=list(ast.literal_eval(d.get("warning_fail_led",None))),
+        success_led=list(ast.literal_eval(d.get("success_led",None))),
         timeout_secs=int(d.get("timeout_secs", 60)),
         init_sleep_mins=int(d.get("init_sleep_mins", 5)),
     )
@@ -65,17 +65,17 @@ def report_sanity_metrics(testName, testExitCode, testSeverity):
 
 
 def reset_all_sanity_leds(sanity_conf):
-    for led in sanity_conf.success_led:
+    for led, brightness in sanity_conf.success_led:
         subprocess.Popen(
             "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
         )
 
-    for led in sanity_conf.warning_fail_led:
+    for led, brightness in sanity_conf.warning_fail_led:
         subprocess.Popen(
             "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
         )
 
-    for led in sanity_conf.fatal_fail_led:
+    for led, brightness in sanity_conf.fatal_fail_led:
         subprocess.Popen(
             "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
         )
@@ -87,9 +87,9 @@ def set_sanity_check_led(sanity_conf, led):
         return
 
     reset_all_sanity_leds(sanity_conf)
-    for l in led:
+    for l, b in led:
         subprocess.Popen(
-            "echo 255 > " + l + "brightness", shell=True, stdout=subprocess.PIPE
+            "echo " + str(b) + " > " + l + "brightness", shell=True, stdout=subprocess.PIPE
         )
 
 
@@ -98,13 +98,13 @@ def led_paths_exist(sanity_config):
     warning_paths = True
     fatal_paths = True
 
-    for led in sanity_config.success_led:
+    for led, b in sanity_config.success_led:
         success_paths = success_paths and os.path.exists(led)
 
-    for led in sanity_config.warning_fail_led:
+    for led, b in sanity_config.warning_fail_led:
         warning_paths = warning_paths and os.path.exists(led)
 
-    for led in sanity_config.fatal_fail_led:
+    for led, b in sanity_config.fatal_fail_led:
         fatal_paths = fatal_paths and os.path.exists(led)
 
     return fatal_paths and success_paths and warning_paths

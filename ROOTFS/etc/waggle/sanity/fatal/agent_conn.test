@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "Agent Connection Test: Begin"
+
+expectedAgent=$(cat /etc/waggle/node_manifest.json | jq '[.nxagent | select(.present == true)] | length')
+
+if [[ $expectedAgent == 0 ]]; then
+    echo "Agent Present Test: No agent expected for this device PASS"
+    exit 0
+fi
+
+if ping -q -c 1 -W 1 10.31.81.3 >/dev/null; then
+    echo "Agent Connection Test: Ping of 10.31.81.3 successful PASS"
+    exit 0
+fi
+
+echo "Agent Connection Test: couldn't ping 10.31.81.3 FAIL"
+exit 1
