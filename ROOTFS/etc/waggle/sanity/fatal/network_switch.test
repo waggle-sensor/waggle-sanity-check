@@ -32,7 +32,7 @@ repeat 3 echo "show hardware" > "$dev"
 
 if ! timeout 10 grep -i -m 1 "software version" "$dev"; then
     echo "Network Switch Test: could not detect version FAIL"
-    exit 1
+    exit 2
 fi
 
 # attempt but don't check for logout
