@@ -5,6 +5,10 @@ import os
 import json
 import urllib.error, urllib.request
 
+# TODO: credential denial by Hanwha camera is not captured
+#       by the http request; needs to look into the body
+#       to see if the response is 'unauthorized'
+
 """
     Error codes (1 byte)
     each value represents the bit order
@@ -42,7 +46,7 @@ def read_camera_manifest(topic_camera='cameras', path='/etc/waggle/node_manifest
                     yield camera
 
 
-def http_request(url, user='waggle', pw='a2kwe89wak3na7@', timeout=5):
+def http_request(url, user='waggle', pw='a2kWe89wak3na7@', timeout=5):
     passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     passman.add_password(None, url, user, pw)
     authhandler = urllib.request.HTTPDigestAuthHandler(passman)
