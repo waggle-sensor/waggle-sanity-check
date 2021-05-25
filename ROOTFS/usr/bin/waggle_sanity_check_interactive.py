@@ -10,12 +10,6 @@ from typing import NamedTuple
 
 
 class SanityCheckConfig(NamedTuple):
-    fatal_tests: str
-    warning_tests: str
-    check_mins: int
-    warning_fail_led: list
-    fatal_fail_led: list
-    success_led: list
     timeout_secs: int
     interactive_tests: str
 
@@ -40,12 +34,6 @@ def read_sanity_check_config(filename, section="all"):
 
     return SanityCheckConfig(
         interactive_tests=d.get("interactive_tests", None),
-        fatal_tests=d.get("fatal_tests", None),
-        warning_tests=d.get("warning_tests", None),
-        check_mins=int(d.get("check_mins", 60)),
-        fatal_fail_led=json.loads(d.get("fatal_fail_led", None)),
-        warning_fail_led=json.loads(d.get("warning_fail_led", None)),
-        success_led=json.loads(d.get("success_led", None)),
         timeout_secs=int(d.get("timeout_secs", 60)),
     )
 
