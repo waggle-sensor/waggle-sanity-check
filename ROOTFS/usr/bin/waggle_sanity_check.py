@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
+import ast
 import configparser
 import json
 import logging
 import os
 import subprocess
 import time
+from pathlib import Path
 from typing import NamedTuple
-import ast
+
 
 class SanityCheckConfig(NamedTuple):
     fatal_tests: str
@@ -18,6 +20,7 @@ class SanityCheckConfig(NamedTuple):
     success_led: list
     timeout_secs: int
     init_sleep_mins: int
+
 
 def read_config_section_dict(filename, section):
     config = configparser.ConfigParser()
@@ -41,9 +44,9 @@ def read_sanity_check_config(filename, section="all"):
         fatal_tests=d.get("fatal_tests", None),
         warning_tests=d.get("warning_tests", None),
         check_mins=int(d.get("check_mins", 60)),
-        fatal_fail_led=list(ast.literal_eval(d.get("fatal_fail_led",None))),
-        warning_fail_led=list(ast.literal_eval(d.get("warning_fail_led",None))),
-        success_led=list(ast.literal_eval(d.get("success_led",None))),
+        fatal_fail_led=list(ast.literal_eval(d.get("fatal_fail_led", None))),
+        warning_fail_led=list(ast.literal_eval(d.get("warning_fail_led", None))),
+        success_led=list(ast.literal_eval(d.get("success_led", None))),
         timeout_secs=int(d.get("timeout_secs", 60)),
         init_sleep_mins=int(d.get("init_sleep_mins", 5)),
     )
@@ -89,7 +92,9 @@ def set_sanity_check_led(sanity_conf, led):
     reset_all_sanity_leds(sanity_conf)
     for l, b in led:
         subprocess.Popen(
-            "echo " + str(b) + " > " + l + "brightness", shell=True, stdout=subprocess.PIPE
+            "echo " + str(b) + " > " + l + "brightness",
+            shell=True,
+            stdout=subprocess.PIPE,
         )
 
 
@@ -117,28 +122,26 @@ def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
     testsFailed = []
 
     logging.info(f"Executing Tests in Dir: {tests_dir}")
-    for filename in os.listdir(tests_dir):
-        if filename.endswith(".test"):
-            totalTests += 1
+    for test_path in sorted(Path(tests_dir).glob("*.test")):
+        testname = test_path.stem
+        totalTests += 1
 
-            logging.info(f"executing test {filename}")
-            test_path = tests_dir + filename
+        logging.info(f"executing test {testname}")
+        try:
+            test_failed = subprocess.call(str(test_path), timeout=timeout_secs)
+        except Exception:
+            logging.info(
+                f"Timed out while executing {testname} after {timeout_secs} seconds"
+            )
+            test_failed = 127
 
-            try:
-                test_failed = subprocess.call(test_path, timeout=timeout_secs)
-            except Exception:
-                logging.info(
-                    f"Timed out while executing {filename} after {timeout_secs} seconds"
-                )
-                test_failed = 127
+        logging.info(f"test produced result: {test_failed}")
+        report_sanity_metrics(testname, test_failed, tests_severity)
 
-            logging.info(f"test produced result: {test_failed}")
-            report_sanity_metrics(filename[:-5], test_failed, tests_severity)
-
-            if test_failed:
-                testsFailed.append((filename[:-5], test_failed))
-                totalFailed += 1
-                led_set = True
+        if test_failed:
+            testsFailed.append((testname, test_failed))
+            totalFailed += 1
+            led_set = True
 
     # pet systemd watchdog
     update_systemd_watchdog()
@@ -151,23 +154,27 @@ def update_systemd_watchdog():
     except Exception:
         logging.warning("skipping reset of systemd watchdog")
 
+
 def sleep_and_pet_watchdog(mins_to_sleep):
     minutesSlept = 0
     while True:
         time.sleep(60)
         minutesSlept += 1
-        
+
         # update software watchdog
         update_systemd_watchdog()
 
         if minutesSlept >= mins_to_sleep:
             break
 
+
 def main():
     logging.basicConfig(level=logging.INFO)
     sanity_config = read_sanity_check_config("/etc/waggle/sanity/config.ini")
 
-    logging.info(f"Going to sleep for {sanity_config.init_sleep_mins} mins to allow other services to get started")
+    logging.info(
+        f"Going to sleep for {sanity_config.init_sleep_mins} mins to allow other services to get started"
+    )
     sleep_and_pet_watchdog(sanity_config.init_sleep_mins)
 
     # update software watchdog
@@ -225,6 +232,7 @@ def main():
 
         logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
         sleep_and_pet_watchdog(sanity_config.check_mins)
+
 
 if __name__ == "__main__":
     main()
