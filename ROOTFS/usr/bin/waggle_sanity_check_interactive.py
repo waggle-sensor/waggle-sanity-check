@@ -59,18 +59,21 @@ def execute_tests_in_path(tests_dir, tests_severity):
     testsFailed = []
 
     logging.info(f"Executing Tests in Dir: {tests_dir}")
-    for filename in os.listdir(tests_dir):
+    tests = os.listdir(tests_dir)
+    tests.sort()
+    for filename in tests:
         if filename.endswith(".test"):
+            testname = filename.split("_", 1)[1]
             totalTests += 1
 
-            logging.info(f"executing test {filename}")
+            logging.info(f"executing test {testname}")
             test_path = tests_dir + filename
             test_failed = subprocess.call(test_path)
             logging.info(f"test produced result: {test_failed}")
-            report_sanity_metrics(filename[:-5], test_failed, tests_severity)
+            report_sanity_metrics(testname[:-5], test_failed, tests_severity)
 
             if test_failed:
-                testsFailed.append((filename[:-5], test_failed))
+                testsFailed.append((testname[:-5], test_failed))
                 totalFailed += 1
 
     return totalTests, totalFailed, testsFailed
