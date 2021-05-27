@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import subprocess
-
+from pathlib import Path
 from typing import NamedTuple
 
 
@@ -59,22 +59,19 @@ def execute_tests_in_path(tests_dir, tests_severity):
     testsFailed = []
 
     logging.info(f"Executing Tests in Dir: {tests_dir}")
-    tests = os.listdir(tests_dir)
-    tests.sort()
-    for filename in tests:
-        if filename.endswith(".test"):
-            testname = filename.split("_", 1)[1]
-            totalTests += 1
+    for test_path in sorted(Path(tests_dir).glob("*.test")):
+        # extract off the ordering number pre-fix in the filename
+        testname = test_path.stem.split("_", 1)[1]
+        totalTests += 1
 
-            logging.info(f"executing test {testname}")
-            test_path = tests_dir + filename
-            test_failed = subprocess.call(test_path)
-            logging.info(f"test produced result: {test_failed}")
-            report_sanity_metrics(testname[:-5], test_failed, tests_severity)
+        logging.info(f"executing test {testname}")
+        test_failed = subprocess.call(str(test_path))
+        logging.info(f"test produced result: {test_failed}")
+        report_sanity_metrics(testname, test_failed, tests_severity)
 
-            if test_failed:
-                testsFailed.append((testname[:-5], test_failed))
-                totalFailed += 1
+        if test_failed:
+            testsFailed.append((testname, test_failed))
+            totalFailed += 1
 
     return totalTests, totalFailed, testsFailed
 
