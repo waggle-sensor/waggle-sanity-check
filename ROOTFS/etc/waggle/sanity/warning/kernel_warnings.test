@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# NOTE(sean) useful for running a few test cases.
+# journalctl() {
+# 	echo 'woww'
+# 	echo 'Random Fake Warning'
+# 	echo 'Checking was requested for "/media/root-ro/", but it is not a device.'
+# 	# echo 'more errors!'
+# }
+
 # NOTE(sean)
 # the test is designed to be a "rolling 2h window" check for dmesg logs. it assumes the
 # sanity test suite is run every hour.
@@ -9,13 +17,12 @@ declare -a whitelist=("Checking was requested for \"/media/root-ro/\", but it is
 totalWarnings=$(journalctl -q -k -p 4 --since -2h | wc -l)
 whitelistedWarnings=0
 
-for i in "${whitelist[@]}"
-do
+for i in "${whitelist[@]}"; do
 	warningsOfType=$(journalctl -q -k -p 4 --since -2h | grep -o "$i" | wc -l)
 	whitelistedWarnings=$((whitelistedWarnings + warningsOfType))
 done
 
-if [ $totalWarnings == $whitelistedWarnings ]; then
+if ((totalWarnings == whitelistedWarnings)); then
 	echo "Kernel Warnings Test: expecting $totalWarnings warnings, found $whitelistedWarnings whitelisted warnings PASS"
 	exit 0
 fi
