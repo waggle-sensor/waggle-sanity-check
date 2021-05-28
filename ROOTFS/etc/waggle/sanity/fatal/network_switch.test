@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# TODO(sean) determine where to get the password from
-username="ubnt"
-password="ubnt"
-
 if ! dev=$(ls /dev/serial/by-id/usb-FTDI* | head -n 1); then
     echo "Network Switch Test: could not detect device FAIL"
     exit 1
+fi
+
+if ! username=$(waggle-get-config -s network-switch -k username); then
+    echo "Network Switch Test: missing config FAIL"
+    exit 2
+fi
+
+if ! password=$(waggle-get-config -s network-switch -k password); then
+    echo "Network Switch Test: missing config FAIL"
+    exit 2
 fi
 
 # required for standard io to work with serial console
@@ -37,6 +43,7 @@ for _ in $(seq 20); do
     esac
 done
 
+# attempt to logout, even if test fails to avoid leaving console open
 echo "logout" > "$dev"
 echo "Network Switch Test: could not detect version FAIL"
-exit 2
+exit 3
