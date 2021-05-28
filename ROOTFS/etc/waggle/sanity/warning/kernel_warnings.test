@@ -5,9 +5,20 @@
 # sanity test suite is run every hour.
 # -k is kernel logs ~ dmesg
 # -p 4 is warning level entries
-if journalctl -q -k -p 4 --since -2h | grep -q .; then
-    echo "Kernel Warnings Test: FAIL"
-    exit 1
+declare -a whitelist=("Checking was requested for \"/media/root-ro/\", but it is not a device." "Random Fake Warning")
+totalWarnings=$(journalctl -q -k -p 4 --since -2h | wc -l)
+whitelistedWarnings=0
+
+for i in "${whitelist[@]}"
+do
+	warningsOfType=$(journalctl -q -k -p 4 --since -2h | grep -o "$i" | wc -l)
+	whitelistedWarnings=$((whitelistedWarnings + warningsOfType))
+done
+
+if [ $totalWarnings == $whitelistedWarnings ]; then
+	echo "Kernel Warnings Test: expecting $totalWarnings warnings, found $whitelistedWarnings whitelisted warnings PASS"
+	exit 0
 fi
 
-echo "Kernel Warnings Test: PASS"
+echo "Kernel Warnings Test: expecting $totalWarnings warnings, found $whitelistedWarnings whitelisted warnings FAIL"
+exit 1
