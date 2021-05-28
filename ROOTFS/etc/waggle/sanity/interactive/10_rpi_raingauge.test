@@ -8,8 +8,9 @@ fi
 cd $(dirname $0)
 
 if ! resp=$(ssh rpi bash -s < rpi_check_raingauge_payload.sh); then
+    exitcode=$?
     echo "Rain Gauge Test: ${resp} FAIL"
-    exit $?
+    exit $exitcode
 fi
 
 echo "Rain Gauge Test: PASS"
