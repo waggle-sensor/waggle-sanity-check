@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# A test to ensure proper PSU status
+
+pf="PSU Status test"
+echo "$pf: Begin"
+
+acok=$(waggle-get-config -s wagman -k gpio-acok3)
+pg1=$(waggle-get-config -s wagman -k gpio-pg1)
+pg2=$(waggle-get-config -s wagman -k gpio-pg2)
+pg3=$(waggle-get-config -s wagman -k gpio-pg3)
+pg4=$(waggle-get-config -s wagman -k gpio-pg4)
+
+gpiopath="/sys/class/gpio"
+
+# not my code, copied from Joe's PSU test: ../interactive/99_psu_control.test
+gpio_high() { 
+
+        gpio=$1
+        if [ ! -f $gpiopath/gpio$gpio/value ]; then 
+                echo "$pf: Cannot find value of device $gpio"
+                exit 1
+        fi
+
+        if [ $(cat $gpiopath/gpio$gpio/value) -eq 1 ]; then 
+                return 0
+        else 
+                return 1
+        fi
+}
+verify_export() { 
+
+        current_gpio=$1
+
+        # try to export, it will give us error if we can't
+        if [ ! -d $gpiopath/gpio$current_gpio ]; then 
+                echo $current_gpio > $gpiopath/export
+
+                if [ "$?" != 0 ]; then
+                        echo "Could not export $current_gpio FAIL"
+                        exit 2
+                fi
+
+        fi
+        # set the gpio as input
+        echo "in" > $gpiopath/gpio$current_gpio/direction
+
+        # verify that our gpio is an input
+        if [ "$(cat $gpiopath/gpio$current_gpio/direction)" != "in" ];
+        then
+                echo "$pf: $current_gpio not set to correct input direction FAIL"
+                exit 3
+        fi
+
+}
+
+# export the GPIOs and set to input
+verify_export $acok
+verify_export $pg1
+verify_export $pg2
+verify_export $pg3
+verify_export $pg4
+
+echo "$pf: ACOK set to $( cat $gpiopath/gpio$acok/value )"
+echo "$pf: PG1 set to $( cat $gpiopath/gpio$pg1/value )"
+echo "$pf: PG2 set to $( cat $gpiopath/gpio$pg2/value )"
+echo "$pf: PG3 set to $( cat $gpiopath/gpio$pg3/value )"
+echo "$pf: PG4 set to $( cat $gpiopath/gpio$pg4/value )"
+
+isEPPresent=
+if cat /etc/waggle/node_manifest.json | jq .psu.ep_supply.present | grep -q true; then
+        echo "$pf: testing EP supply"
+        isEPPresent=1
+else
+        echo "$pf: SKIPPING testing EP supply (not installed)"
+fi
+
+isPHPresent=
+if cat /etc/waggle/node_manifest.json | jq .psu.ph_supply.present | grep -q true; then
+        echo "$pf: testing PH supply"
+        isPHPresent=1
+else
+        echo "$pf: SKIPPING testing PH supply (not installed)"
+fi
+
+# Testing ACOK and PG1
+if ! gpio_high $acok; then
+        echo "$pf: ACOK3 Not powered FAIL"
+        exit 4
+fi
+
+if ! gpio_high $pg1; then
+        echo "$pf: PG1  Not powered FAIL"
+        exit 5
+fi
+
+# Testing EP
+if  [ $isEPPresent ]; then
+        if ! gpio_high $pg2;
+        then
+                echo "$pf: EP is present in manifest, but PG2 is set to $? FAIL"
+                exit 6
+        fi
+fi
+
+# make sure both pg3 and pg4 are the same
+if [[ $(gpio_high $pg3) != $(gpio_high $pg4) ]]; 
+then 
+        echo "$pf: PG3 and PG4 are not aligned, PG3= $(cat $gpiopath/gpio$pg3/value ), PG4= $(cat $gpiopath/gpio$pg4/value) FAIL"
+        exit 7
+fi
+
+# Check pg3 and pg4 to make sure they align with PH
+if [ $isPHPresent ] ; then
+        if ! gpio_high $pg3; 
+        then
+                echo "$pf: PH is present in manifest, but PG3 is set to $? FAIL"
+                exit 8
+        fi
+
+        if ! gpio_high $pg4;
+        then 
+                echo "$pf: PH is present in manifest, but PG4 is set to $? FAIL"
+                exit 9
+        fi
+fi
+
+echo "$pf: PASS"
