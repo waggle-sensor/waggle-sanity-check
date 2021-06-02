@@ -94,90 +94,90 @@ if ! gpio_high $acok; then
 fi
 
 # set the power supply to EP off, PH on and validate
-echo "$pf: testing EP:off | EP:on"
+echo "$pf: testing EP:off | PH:on"
 waggle-set-psu-state off on
 sleep 2s
 if ! gpio_high $acok; then
-	echo "$pf: EP:off | EP:on - ACOK (high) FAIL"
+	echo "$pf: EP:off | PH:on - ACOK (high) FAIL"
 	exit 20
 fi
 if ! gpio_high $pg1; then
-	echo "$pf: EP:off | EP:on - PG1 (high) FAIL"
+	echo "$pf: EP:off | PH:on - PG1 (high) FAIL"
 	exit 21
 fi
 if [ -n "$ep_supply" ]; then
 	if gpio_high $pg2; then
-		echo "$pf: EP:off | EP:on - PG2 (low) FAIL"
+		echo "$pf: EP:off | PH:on - PG2 (low) FAIL"
 		exit 22
 	fi
 fi
 if [ -n "$ph_supply" ]; then
 	if ! gpio_high $pg3; then
-		echo "$pf: EP:off | EP:on - PG3 (high) FAIL"
+		echo "$pf: EP:off | PH:on - PG3 (high) FAIL"
 		exit 23
 	fi
 	if ! gpio_high $pg4; then
-		echo "$pf: EP:off | EP:on - PG4 (high) FAIL"
+		echo "$pf: EP:off | PH:on - PG4 (high) FAIL"
 		exit 24
 	fi
 fi
 sleep 2s
 
 # set the power supply to EP off, PH off and validate
-echo "$pf: testing EP:off | EP:off"
+echo "$pf: testing EP:off | PH:off"
 waggle-set-psu-state off off
 sleep 2s
 if ! gpio_high $acok; then
-	echo "$pf: EP:off | EP:off - ACOK (high) FAIL"
+	echo "$pf: EP:off | PH:off - ACOK (high) FAIL"
 	exit 30
 fi
 if ! gpio_high $pg1; then
-	echo "$pf: EP:off | EP:off - PG1 (high) FAIL"
+	echo "$pf: EP:off | PH:off - PG1 (high) FAIL"
 	exit 31
 fi
 if [ -n "$ep_supply" ]; then
 	if gpio_high $pg2; then
-		echo "$pf: EP:off | EP:off - PG2 (low) FAIL"
+		echo "$pf: EP:off | PH:off - PG2 (low) FAIL"
 		exit 32
 	fi
 fi
 if [ -n "$ph_supply" ]; then
 	if gpio_high $pg3; then
-		echo "$pf: EP:off | EP:off - PG3 (low) FAIL"
+		echo "$pf: EP:off | PH:off - PG3 (low) FAIL"
 		exit 33
 	fi
 	if gpio_high $pg4; then
-		echo "$pf: EP:off | EP:off - PG4 (low) FAIL"
+		echo "$pf: EP:off | PH:off - PG4 (low) FAIL"
 		exit 34
 	fi
 fi
 sleep 2s
 
 # set the power supply to EP on, PH on and validate
-echo "$pf: testing EP:on | EP:on"
+echo "$pf: testing EP:on | PH:on"
 waggle-set-psu-state on on
 sleep 2s
 if ! gpio_high $acok; then
-	echo "$pf: EP:on | EP:on - ACOK (high) FAIL"
+	echo "$pf: EP:on | PH:on - ACOK (high) FAIL"
 	exit 40
 fi
 if ! gpio_high $pg1; then
-	echo "$pf: EP:on | EP:on - PG1 (high) FAIL"
+	echo "$pf: EP:on | PH:on - PG1 (high) FAIL"
 	exit 41
 fi
 if [ -n "$ep_supply" ]; then
 	if ! gpio_high $pg2; then
-		echo "$pf: EP:on | EP:on - PG2 (high) FAIL"
+		echo "$pf: EP:on | PH:on - PG2 (high) FAIL"
 		exit 42
 	fi
 fi
 if [ -n "$ph_supply" ]; then
 	if ! gpio_high $pg3; then
-		echo "$pf: EP:on | EP:on - PG3 (high) FAIL"
+		echo "$pf: EP:on | PH:on - PG3 (high) FAIL"
 		exit 43
 	fi
 	if ! gpio_high $pg4; then
-		echo "$pf: EP:on | EP:on - PG4 (high) FAIL"
+		echo "$pf: EP:on | PH:on - PG4 (high) FAIL"
 		exit 44
 	fi
 fi
