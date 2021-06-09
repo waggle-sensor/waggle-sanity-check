@@ -1,0 +1,86 @@
+#!/bin/bash
+
+pf="Recovery SDCard test"
+echo "$pf: Begin"
+
+
+mount_cleanup () { 
+
+        if [ -d "/tmp/core_sdcard_test/" ]; 
+        then 
+                if mountpoint -q "/tmp/core_sdcard_test" ; 
+                then
+                        umount /tmp/core_sdcard_test/
+                fi
+                rm -r /tmp/core_sdcard_test/
+        fi
+}
+trap 'mount_cleanup' EXIT
+
+
+# run fsck on our sd card
+if ! fsck -nf /dev/mmcblk1p1;
+then
+        echo "$pf: /dev/mmcblk1p1 failed fsck FAIL"
+        exit 1
+fi
+
+if ! fsck -nf /dev/mmcblk1p2;
+then
+        echo "$pf: /dev/mmcblk1p2 failed fsck FAIL"
+        exit 2
+fi
+
+mkdir /tmp/core_sdcard_test
+
+if ! mount -r /dev/mmcblk1p1  /tmp/core_sdcard_test/;
+then 
+        echo "Could not mount /dev/mmcblk1p1 FAIL"
+        exit 3
+fi
+
+if [ "$(cat /tmp/core_sdcard_test/etc/overlayroot.conf | grep "overlayroot=\"tmpfs")" = ""  ];
+then
+        echo "$pf: sdcard tmpfs not properly set up FAIL"
+        exit 4
+fi
+
+
+if ! chroot /tmp/core_sdcard_test ls;
+then
+        echo "$pf: Could not run chroot on sdcard, invalid rootfs FAIL"
+        exit 5
+fi
+
+if [ "$(file -L /tmp/core_sdcard_test/boot/initrd | grep "gzip compressed data")" = "" ];
+then
+        echo "$pf: sdcard initrd is not a valid archive FAIL"
+        exit 6
+fi
+
+if [ "$(file -L /tmp/core_sdcard_test/boot/Image | grep data)" = "" ];
+then
+        echo "$pf: /boot/Image is not valid FAIL"
+        exit 7
+fi
+
+if [ "$(file -L /tmp/core_sdcard_test/boot/Image.sig | grep data)" = "" ];
+then
+        echo "$pf: /boot/Image.sig is not valid FAIL"
+        exit 8
+fi
+
+if [ "$(file -L /tmp/core_sdcard_test/boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb | grep "Device Tree Blob")" = "" ];
+then
+        echo "$pf: /boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb not valid FAIL"
+        exit 9
+fi
+
+if [ "$(file -L /tmp/core_sdcard_test/boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb.sig | grep "data")" = "" ];
+then
+        echo "$pf: /boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb.sig not valid FAIL"
+        exit 10
+fi
+
+echo "$pf: PASS" 
+exit 0 
