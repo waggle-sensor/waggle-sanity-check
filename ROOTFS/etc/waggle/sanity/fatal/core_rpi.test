@@ -1,0 +1,69 @@
+#!/bin/bash
+
+pf="RPI test"
+echo "$pf: Begin"
+
+if [ "$(df -h | grep "/media/rpi")" = "" ];
+then 
+        echo "$pf: RPI not mounted at /media/rpi FAIL"
+        exit 1
+fi
+
+if ! systemctl is-active nfs-server;
+then
+        echo "$pf: nfs-server not running on core FAIL"
+        exit 2
+fi
+
+if ! systemctl is-active dnsmasq; then
+        echo "$pf: dnsmasq is not running on core FAIL"
+        exit 3
+fi
+
+if [ "$(journalctl -b0 | grep "/dev/mmcblk0p11: clean")" = "" ];
+then
+        echo "$pf: fsck did not pass on RPI pxe/nfs partition FAIL"
+        exit 4
+fi
+
+if [ ! -f /etc/waggle/node_manifest.json ];
+then
+        echo "$pf: node_manifest.json does not exist FAIL"
+        exit 5
+fi
+
+if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then 
+
+        if [ "$(ssh rpi "echo media_echo_test")" != "media_echo_test" ];
+        then 
+                echo "$pf: cannot ssh into RPI FAIL"
+                exit 6
+        fi
+
+        if [ "$(ssh rpi "df -h | grep /media/rpi")" = "" ];
+        then
+                echo "$pf: RPI RO partition not mounted FAIL"
+                exit 7
+        fi
+
+        if [ "$(ssh rpi "df -h | grep root-rw")" = "" ];
+        then
+                echo "$pf: RPI RW partition not mounted FAIL"
+                exit 8
+        fi
+
+        if [ "$(ssh rpi "df -h | grep overlayfs-root")" = "" ];
+        then
+                echo "$pf: RPI overlay partition not mounted FAIL"
+                exit 9
+        fi
+
+        if [ "$(ssh rpi "df -h | grep /media/plugin-data")" = "" ];
+        then
+                echo "$pf: RPI /media/plugin-data partition not mounted FAIL"
+                exit 10
+        fi
+fi
+
+echo "$pf: PASS"
+exit 0 

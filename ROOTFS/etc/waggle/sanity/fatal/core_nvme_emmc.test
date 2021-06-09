@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# nx core tests
+pf="NVME and eMMC tests"
+
+echo "$pf: Begin"
+
+# properly mounted tests 
+if [ "$(df -h | grep "/media/root-ro")" = "" ];
+then
+        echo "$pf: RO partition not mounted FAIL"
+        exit 1
+fi
+
+if [ "$(df -h | grep "/media/root-rw")" = "" ];
+then
+        echo "$pf: RW partition not mounted FAIL"
+        exit 2
+fi
+
+if [ "$(df -h | grep "/media/plugin-data")" = "" ];
+then
+        echo "$pf: plugin-data not mounted FAIL"
+        exit 3
+fi
+
+# fsck pass
+# TODO: add future fsck for nvme0n1p3 259:3 0 s56G 0 part /media/root-rw/
+if [ "$(cat /run/initramfs/fsck.log | grep "/dev/mmcblk0p1: clean")" = "" ];
+then
+        echo "$pf: incorrect fsck pass on nx-core FAIL"
+        exit 4
+fi
+
+
+if [ "$(swapon | grep "/dev/nvme0n1p1")" = "" ];
+then
+        echo "$pf: swap not properly mounted FAIL"
+        exit 5
+fi
+
+if [ "$(file -L /boot/initrd | grep "gzip compressed data")" = "" ];
+then 
+        echo "$pf: initrd is not a valid archive FAIL"
+        exit 6
+fi
+
+if [ "$(file -L /boot/Image | grep data)" = "" ]; 
+then
+        echo "$pf: /boot/Image is not valid FAIL"
+        exit 7
+fi
+
+if [ "$(file -L /boot/Image.sig | grep data)" = "" ]; 
+then
+        echo "$pf: /boot/Image.sig is not valid FAIL"
+        exit 8
+fi
+
+if [ "$(file -L /boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb | grep "Device Tree Blob")" = "" ];
+then
+        echo "$pf: /boot/dtb/boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb not valid FAIL"
+        exit 9
+fi
+
+if [ "$(file -L /boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb.sig | grep "data")" = "" ];
+then
+        echo "$pf: /boot/dtb/boot/dtb/tegra194-xavier-nx-cti-NGX003-WAGGLE-WS.dtb.sig not valid FAIL"
+        exit 10
+fi
+
+
+
+echo "$pf: PASS"
+exit 0 
