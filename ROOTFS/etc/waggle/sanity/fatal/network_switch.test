@@ -23,7 +23,7 @@ for _ in $(seq 20); do
     output=$(timeout 3 cat "$dev")
     case "$output" in
     *EdgeSwitch*\>)
-        echo "show hardware" > "$dev"
+        echo "show version" > "$dev"
         if timeout 3 grep -m 1 "Software Version" "$dev"; then
             echo "logout" > "$dev"
             echo "Network Switch Test: PASS"
