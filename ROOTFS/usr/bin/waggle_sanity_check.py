@@ -143,8 +143,9 @@ def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
             totalFailed += 1
             led_set = True
 
-    # pet systemd watchdog
-    update_systemd_watchdog()
+        # pet systemd watchdog
+        update_systemd_watchdog()
+    
     return led_set, totalTests, totalFailed, testsFailed
 
 
