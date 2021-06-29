@@ -5,7 +5,7 @@ pf="NVME and eMMC tests"
 
 echo "$pf: Begin"
 
-# properly mounted tests 
+# properly mounted tests
 if [ "$(df -h | grep "/media/root-ro")" = "" ];
 then
         echo "$pf: RO partition not mounted FAIL"
@@ -40,18 +40,18 @@ then
 fi
 
 if [ "$(file -L /boot/initrd | grep "gzip compressed data")" = "" ];
-then 
+then
         echo "$pf: initrd is not a valid archive FAIL"
         exit 6
 fi
 
-if [ "$(file -L /boot/Image | grep data)" = "" ]; 
+if [ "$(file -L /boot/Image | grep data)" = "" ];
 then
         echo "$pf: /boot/Image is not valid FAIL"
         exit 7
 fi
 
-if [ "$(file -L /boot/Image.sig | grep data)" = "" ]; 
+if [ "$(file -L /boot/Image.sig | grep data)" = "" ];
 then
         echo "$pf: /boot/Image.sig is not valid FAIL"
         exit 8
@@ -72,4 +72,4 @@ fi
 
 
 echo "$pf: PASS"
-exit 0 
+exit 0
