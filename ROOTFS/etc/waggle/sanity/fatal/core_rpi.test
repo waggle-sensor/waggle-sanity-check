@@ -4,7 +4,7 @@ pf="RPI test"
 echo "$pf: Begin"
 
 if [ "$(df -h | grep "/media/rpi")" = "" ];
-then 
+then
         echo "$pf: RPI not mounted at /media/rpi FAIL"
         exit 1
 fi
@@ -32,10 +32,10 @@ then
         exit 5
 fi
 
-if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then 
+if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then
 
         if [ "$(ssh rpi "echo media_echo_test")" != "media_echo_test" ];
-        then 
+        then
                 echo "$pf: cannot ssh into RPI FAIL"
                 exit 6
         fi
@@ -66,4 +66,4 @@ if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then
 fi
 
 echo "$pf: PASS"
-exit 0 
+exit 0

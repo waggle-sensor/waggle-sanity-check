@@ -4,11 +4,11 @@ pf="Recovery SDCard test"
 echo "$pf: Begin"
 
 
-mount_cleanup () { 
+mount_cleanup () {
 
-        if [ -d "/tmp/core_sdcard_test/" ]; 
-        then 
-                if mountpoint -q "/tmp/core_sdcard_test" ; 
+        if [ -d "/tmp/core_sdcard_test/" ];
+        then
+                if mountpoint -q "/tmp/core_sdcard_test" ;
                 then
                         umount /tmp/core_sdcard_test/
                 fi
@@ -34,7 +34,7 @@ fi
 mkdir /tmp/core_sdcard_test
 
 if ! mount -r /dev/mmcblk1p1  /tmp/core_sdcard_test/;
-then 
+then
         echo "Could not mount /dev/mmcblk1p1 FAIL"
         exit 3
 fi
@@ -82,5 +82,5 @@ then
         exit 10
 fi
 
-echo "$pf: PASS" 
-exit 0 
+echo "$pf: PASS"
+exit 0
