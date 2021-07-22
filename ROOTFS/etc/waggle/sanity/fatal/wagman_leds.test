@@ -22,13 +22,5 @@ for led in "${leds[@]}"; do
 	fi
 done
 
-# driver logs errors on failed brightness writes, search log for any errors
-for led in "${leds[@]}"; do
-	if journalctl -b0 --no-pager | grep -m1 "leds $(basename $led): Setting an LED's brightness failed"; then
-		echo "Wagman LEDs Test: Wagman LED [$led] prior set brightness failure detected FAIL"
-		exit 2
-	fi
-done
-
 echo "Wagman LEDs Test: PASS"
 exit 0
