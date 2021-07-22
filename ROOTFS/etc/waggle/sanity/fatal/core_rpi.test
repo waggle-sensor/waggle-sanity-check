@@ -20,7 +20,7 @@ if ! systemctl is-active dnsmasq; then
         exit 3
 fi
 
-if [ "$(journalctl -b0 | grep -m1 "/dev/mmcblk0p11: clean")" = "" ];
+if ! fsck -n /dev/mmcblk0p11 | grep -q "/dev/mmcblk0p11: clean";
 then
         echo "$pf: fsck did not pass on RPI pxe/nfs partition FAIL"
         exit 4
