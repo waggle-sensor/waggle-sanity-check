@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Wagman Watchdog Service Test: Begin"
-pingStatus=$(journalctl -b0 --no-pager -u sage-wagman-watchdog | tac | grep -m1 -e 'Pinged' -e 'active' -e 'deactivated')
+pingStatus=$(journalctl --since -2h -u sage-wagman-watchdog | tac | grep -m1 -e 'Pinged' -e 'active' -e 'deactivated')
 
 if [[ ! -z $pingStatus ]]; then
     echo "Wagman Watchdog Service Test: service working as expected, PASS"
