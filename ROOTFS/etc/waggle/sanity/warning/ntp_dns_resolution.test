@@ -1,0 +1,14 @@
+#!/bin/bash
+
+HEADER="NTP DNS Resolution"
+echo "$HEADER: Begin"
+
+DNSADDR="pool.ntp.org"
+
+if [ ! "$(dig +short $DNSADDR)" ]; then
+  echo "$HEADER: dig of $DNSADDR FAIL"
+  exit 1
+fi
+
+echo "$HEADER: PASS"
+exit 0
