@@ -13,7 +13,12 @@
 # sanity test suite is run every hour.
 # -k is kernel logs ~ dmesg
 # -p 4 is warning level entries
-declare -a whitelist=("Checking was requested for \"/media/root-ro/\", but it is not a device." "Random Fake Warning")
+declare -a whitelist=(
+	"Checking was requested for \"/media/root-ro/\", but it is not a device."
+	"Random Fake Warning"
+	"using random self ethernet address"
+	"using random host ethernet address"
+)
 totalWarnings=$(journalctl -q -k -p 4 --since -2h | wc -l)
 whitelistedWarnings=0
 
