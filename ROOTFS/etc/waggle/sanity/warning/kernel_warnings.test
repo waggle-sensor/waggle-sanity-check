@@ -18,12 +18,15 @@ declare -a whitelist=(
 	"Random Fake Warning"
 	"using random self ethernet address"
 	"using random host ethernet address"
+	"------------\[ cut here \]------------"
+	"/home/runner/work/cti-l4t-kernel/cti-l4t-kernel/sources/kernel/kernel-4.9/kernel/cgroup.c:492 cgroup_get+0xd0/0xe8"
+	"---\[ end trace"
 )
 totalWarnings=$(journalctl -q -k -p 4 --since -2h | wc -l)
 whitelistedWarnings=0
 
 for i in "${whitelist[@]}"; do
-	warningsOfType=$(journalctl -q -k -p 4 --since -2h | grep -o "$i" | wc -l)
+	warningsOfType=$(journalctl -q -k -p 4 --since -2h | grep -o -- "$i" | wc -l)
 	whitelistedWarnings=$((whitelistedWarnings + warningsOfType))
 done
 
