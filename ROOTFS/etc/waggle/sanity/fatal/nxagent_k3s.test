@@ -7,7 +7,7 @@ if cat /etc/waggle/node_manifest.json | jq .nxagent.present | grep -q false; the
     exit 0
 fi
 
-if timeout 30s kubectl get nodes --request-timeout='30s' | grep ws-nxagent | grep -q Ready; then
+if timeout 30s kubectl get nodes --request-timeout='30s' | grep ws-nxagent | grep -q ' Ready '; then
     echo "NX-Agent K3S Node Test: NX-Agent configured and ready as K3S agent PASS"
     exit 0
 fi
