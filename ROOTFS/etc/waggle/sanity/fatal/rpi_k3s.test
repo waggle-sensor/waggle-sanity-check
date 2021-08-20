@@ -7,7 +7,7 @@ if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q false; then
     exit 0
 fi
 
-if timeout 30s kubectl get nodes --request-timeout='30s' | grep ws-rpi | grep -q Ready; then
+if timeout 30s kubectl get nodes --request-timeout='30s' | grep ws-rpi | grep -q ' Ready '; then
     echo "RPi K3S Node Test: RPi configured and ready as K3S agent PASS"
     exit 0
 fi
