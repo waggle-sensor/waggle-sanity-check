@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Test for WES k3s wes-rabbitmq running on the RPI only (if available)
+
+pf="WES Audio Server Test"
+echo "$pf: Begin"
+
+pod="wes-audio-server"
+
+# get list of all pods running
+search=$(timeout 30s kubectl get pod -o wide --request-timeout='30s' | grep $pod)
+readarray -t pods <<<"$search"
+
+# check if the provided pod 'name' is found and running
+check_pods() {
+    name=$1
+    # default to not found
+    val=2
+
+    for p in "${pods[@]}"; do
+        if echo "$p" | grep -q "$name"; then
+            echo "$pf: $pod [$name] found"
+            if echo "$p" | grep -q " Running "; then
+                echo "$pf: $pod [$name] found and running"
+                val=0
+            else
+                echo "$pf: $pod [$name] found and NOT running"
+                val=1
+            fi
+            # we found the pod, so stop looping
+            break
+        fi
+    done
+
+    return $val
+}
+
+# return a count of the running pods
+running_pods_count() {
+    count=0
+    for p in "${pods[@]}"; do
+        if echo "$p" | grep -q " Running "; then
+            count=$((count+1))
+        fi
+    done
+    return $count
+}
+
+# set to 0, as not required on nx-core
+total=0
+
+# test for RPI pod (if applicable)
+if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then
+    total=$((total+1))
+    if ! check_pods "ws-rpi"; then
+        echo "$pf: $pod [$name] not running, FAIL"
+        exit 1
+    fi
+else
+    echo "$pf: Stevenson Shield not installed in this node, skip test"
+fi
+
+running_pods_count
+run_pods=$?
+if [ $run_pods -ne $total ]; then
+    echo "$pf: Found running pods ($run_pods) does NOT equal expected ($total), FAIL"
+    exit 10
+fi
+
+echo "$pf: $pod (count: $run_pods) is running on expected k3s nodes, PASS"
+exit 0
