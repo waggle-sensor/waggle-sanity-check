@@ -1,5 +1,45 @@
 #!/bin/bash
 
-echo "Wifi0 Status Test: Begin"
-# use connectivity helper function
-/etc/waggle/sanity/_helper/connectivity_status.test wifi0
+testname="Wifi0 Status Test"
+
+pass() { echo "$testname: $1 PASS"; exit 0; }
+fail() { echo "$testname: $2 FAIL"; exit "$1"; }
+
+echo "$testname: Begin"
+
+# check system manifest to see if this test needs to be done.
+if ! manifest=$(jq .connectivity.wifi0.present /etc/waggle/node_manifest.json); then
+    fail 1 "could not read manifest"
+fi
+
+if echo "$manifest" | grep -q false; then
+    pass "wifi not required by manifest"
+fi
+
+# if already has an ip address, then we know we're good.
+if ip addr show dev wifi0 | grep -q "inet .*/.*"; then
+    pass "wifi has ip address"
+fi
+
+# check if device exists
+if ! nmcli dev show wifi0 > /dev/null; then
+    fail 2 "wifi device not found"
+fi
+
+# get current / cached wireless network list.
+if ! output=$(nmcli --terse dev wifi list ifname wifi0 2>&1); then
+    fail 3 "failed to list wireless networks"
+fi
+
+# if we've detected a network, then we're most likely good.
+if echo "$output" | grep -q .; then
+    pass "wifi is able to detect networks"
+fi
+
+# rescan wifi as a last ditch functionality check
+if timeout 30 bash -c "while ! nmcli dev wifi rescan ifname wifi0; do sleep 1; done"; then
+    pass "wifi rescan ok"
+fi
+
+# catch all remaining errors.
+fail 255 "wifi failed with unknown error"

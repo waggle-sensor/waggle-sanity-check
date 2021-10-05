@@ -1,5 +1,47 @@
 #!/bin/bash
 
-echo "Modem0 Status Test: Begin"
-# use connectivity helper function
-/etc/waggle/sanity/_helper/connectivity_status.test modem0
+testname="Modem0 Status Test"
+
+pass() { echo "$testname: $1 PASS"; exit 0; }
+fail() { echo "$testname: $2 FAIL"; exit "$1"; }
+
+echo "$testname: Begin"
+
+# check system manifest to see if this test needs to be done.
+if ! manifest=$(jq .connectivity.modem0.present /etc/waggle/node_manifest.json); then
+    fail 1 "could not read manifest"
+fi
+
+if echo "$manifest" | grep -q false; then
+    pass "modem not required by manifest"
+fi
+
+# if already has an ip address, then we know we're good.
+if ip addr show dev modem0 2>/dev/null | grep -q "inet .*/.*"; then
+    pass "modem has ip address"
+fi
+
+# get first modem detected
+if ! modem=$(mmcli -L | grep -m1 -o '/org/freedesktop/ModemManager1/Modem/[0-9]*'); then
+    fail 2 "modem not found"
+fi
+
+# get modem info
+if ! modeminfo=$(mmcli -K -m "$modem"); then
+    fail 3 "failed to get modem info"
+fi
+
+# check for known states or failures.
+if echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* --'; then
+    pass "modem not connected but not in a failed state."
+elif echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* sim-missing'; then
+    # NOTE we decided to not maintain a separate entry in the manifest for whether a modem
+    # should have a sim or not, so we will accept this as a "safe error". The two critical
+    # details supporting this are:
+    # 1. The modem can be easily accessed in the main node case.
+    # 2. Nodes will run in their expected network state in soak mode.
+    pass "modem missing sim - this is considered an allowed state."
+fi
+
+# catch all remaining errors.
+fail 255 "modem failed with unknown error"
