@@ -23,12 +23,12 @@ fi
 
 # check if device exists
 if ! nmcli dev show wifi0 > /dev/null; then
-    fail 1 "wifi device not found"
+    fail 2 "wifi device not found"
 fi
 
 # get current / cached wireless network list.
 if ! output=$(nmcli --terse dev wifi list ifname wifi0 2>&1); then
-    fail 2 "failed to list wireless networks"
+    fail 3 "failed to list wireless networks"
 fi
 
 # if we've detected a network, then we're most likely good.
