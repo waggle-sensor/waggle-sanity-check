@@ -17,7 +17,7 @@ if echo "$manifest" | grep -q false; then
 fi
 
 # if already has an ip address, then we know we're good.
-if ip addr show dev modem0 | grep -q "inet .*/32"; then
+if ip addr show dev modem0 | grep -q "inet .*/.*"; then
     pass "modem has ip address"
 fi
 
