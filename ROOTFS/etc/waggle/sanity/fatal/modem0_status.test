@@ -17,7 +17,7 @@ if echo "$manifest" | grep -q false; then
 fi
 
 # if already has an ip address, then we know we're good.
-if ip addr show dev modem0 | grep -q "inet .*/.*"; then
+if ip addr show dev modem0 2>/dev/null | grep -q "inet .*/.*"; then
     pass "modem has ip address"
 fi
 
@@ -31,22 +31,15 @@ if ! modeminfo=$(mmcli -K -m "$modem"); then
     fail 3 "failed to get modem info"
 fi
 
-if echo "$modeminfo" | grep -q 'modem.generic.state.* connected'; then
-    pass "modem state is connected"
-fi
-
-if echo "$modeminfo" | grep -q 'modem.generic.state.* registered'; then
-    pass "modem state is registered"
-fi
-
-# check for any known state failures.
-#
-# NOTE we decided to not maintain a separate entry in the manifest for whether a modem
-# should have a sim or not, so we will accept this as a "safe error". The two critical
-# details supporting this are:
-# 1. The modem can be easily accessed in the main node case.
-# 2. Nodes will run in their expected network state in soak mode.
-if echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.*sim-missing'; then
+# check for known states or failures.
+if echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* --'; then
+    pass "modem does not indicate a state failed reason."
+elif echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* sim-missing'; then
+    # NOTE we decided to not maintain a separate entry in the manifest for whether a modem
+    # should have a sim or not, so we will accept this as a "safe error". The two critical
+    # details supporting this are:
+    # 1. The modem can be easily accessed in the main node case.
+    # 2. Nodes will run in their expected network state in soak mode.
     pass "modem missing sim - this is considered an allowed state."
 fi
 
