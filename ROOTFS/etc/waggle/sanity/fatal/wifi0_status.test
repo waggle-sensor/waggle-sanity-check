@@ -36,13 +36,9 @@ if echo "$output" | grep -q .; then
     pass "wifi is able to detect networks"
 fi
 
-# if we can rescan for networks (or are already scanning), then we're likely good.
-if output=$(nmcli dev wifi rescan ifname wifi0 2>&1); then
-    pass "wifi scan ok"
-elif echo "$output" | grep -q -i "Scanning not allowed while already scanning"; then
-    pass "wifi scan ok"
-elif echo "$output" | grep -q -i "Scanning not allowed immediately following previous scan"; then
-    pass "wifi scan ok"
+# rescan wifi as a last ditch functionality check
+if timeout 15 bash -c "while ! nmcli dev wifi rescan ifname wifi0; do sleep 1; done"; then
+    pass "wifi rescan ok"
 fi
 
 # catch all remaining errors.
