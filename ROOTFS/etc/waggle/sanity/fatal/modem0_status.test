@@ -7,15 +7,16 @@ fail() { echo "$testname: $2 FAIL"; exit "$1"; }
 
 echo "$testname: Begin"
 
-# check system manifest to see if this test needs to be done
+# check system manifest to see if this test needs to be done.
 if ! manifest=$(jq .connectivity.modem0.present /etc/waggle/node_manifest.json); then
     fail 1 "could not read manifest"
 fi
+
 if echo "$manifest" | grep -q false; then
     pass "modem not required by manifest"
 fi
 
-# if modem already has an ip address, then we know we're good.
+# if already has an ip address, then we know we're good.
 if ip addr show dev modem0 | grep -q "inet .*/32"; then
     pass "modem has ip address"
 fi
@@ -38,11 +39,11 @@ if echo "$modeminfo" | grep -q 'modem.generic.state.* registered'; then
     pass "modem state is registered"
 fi
 
-# check for any known state failures
-# TODO decide if manifest should allow this state for non-sim nodes
+# check for any known state failures.
+# TODO decide if manifest should allow this state for non-sim nodes.
 if echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.*sim-missing'; then
     fail 4 "modem missing sim"
 fi
 
-# catch all other states as unknown failures
-fail 5 "modem in unknown failure state"
+# catch all remaining errors.
+fail 255 "modem failed with unknown error"
