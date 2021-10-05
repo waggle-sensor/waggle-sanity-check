@@ -37,7 +37,7 @@ if echo "$output" | grep -q .; then
 fi
 
 # rescan wifi as a last ditch functionality check
-if timeout 15 bash -c "while ! nmcli dev wifi rescan ifname wifi0; do sleep 1; done"; then
+if timeout 30 bash -c "while ! nmcli dev wifi rescan ifname wifi0; do sleep 1; done"; then
     pass "wifi rescan ok"
 fi
 
