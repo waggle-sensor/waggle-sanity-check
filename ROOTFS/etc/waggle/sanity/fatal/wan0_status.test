@@ -1,5 +1,33 @@
 #!/bin/bash
 
-echo "Wan0 Status Test: Begin"
-# use connectivity helper function
-/etc/waggle/sanity/_helper/connectivity_status.test wan0
+# NOTE most of this test isn't required. i'm only keeping it so if we want to check
+# the logs for specifically what passed later, we can.
+
+testname="Wan0 Status Test"
+
+pass() { echo "$testname: $1 PASS"; exit 0; }
+fail() { echo "$testname: $2 FAIL"; exit "$1"; }
+
+echo "$testname: Begin"
+
+# check system manifest to see if this test needs to be done.
+if ! manifest=$(jq .connectivity.wan0.present /etc/waggle/node_manifest.json); then
+    fail 1 "could not read manifest"
+fi
+
+if echo "$manifest" | grep -q false; then
+    pass "wan not required by manifest"
+fi
+
+# if already has an ip address, then we know we're good.
+if ip addr show dev wan0 | grep -q "inet .*/.*"; then
+    pass "wan has ip address"
+fi
+
+# we are ok if only the wan0 link exists.
+if ip link show dev wan0 | grep -q "link/ether"; then
+    pass "wan device exists"
+fi
+
+# generally we should not get here
+fail 2 "wan in unknown failure state"
