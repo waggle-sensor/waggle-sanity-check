@@ -69,19 +69,13 @@ def report_sanity_metrics(testName, testExitCode, testSeverity):
 
 def reset_all_sanity_leds(sanity_conf):
     for led, brightness in sanity_conf.success_led:
-        subprocess.Popen(
-            "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
-        )
+        subprocess.Popen("echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE)
 
     for led, brightness in sanity_conf.warning_fail_led:
-        subprocess.Popen(
-            "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
-        )
+        subprocess.Popen("echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE)
 
     for led, brightness in sanity_conf.fatal_fail_led:
-        subprocess.Popen(
-            "echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE
-        )
+        subprocess.Popen("echo 0 > " + led + "brightness", shell=True, stdout=subprocess.PIPE)
 
 
 def set_sanity_check_led(sanity_conf, led):
@@ -130,9 +124,7 @@ def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
         try:
             test_failed = subprocess.call(str(test_path), timeout=timeout_secs)
         except Exception:
-            logging.info(
-                f"Timed out while executing {testname} after {timeout_secs} seconds"
-            )
+            logging.info(f"Timed out while executing {testname} after {timeout_secs} seconds")
             test_failed = 127
 
         logging.info(f"test produced result: {test_failed}")
@@ -145,7 +137,7 @@ def execute_tests_in_path(tests_dir, tests_severity, timeout_secs):
 
         # pet systemd watchdog
         update_systemd_watchdog()
-    
+
     return led_set, totalTests, totalFailed, testsFailed
 
 
@@ -201,9 +193,7 @@ def main():
             totalNumFatalTests,
             numberOfFatalTestsFailed,
             fatalTestsFailed,
-        ) = execute_tests_in_path(
-            sanity_config.fatal_tests, "fatal", sanity_config.timeout_secs
-        )
+        ) = execute_tests_in_path(sanity_config.fatal_tests, "fatal", sanity_config.timeout_secs)
 
         logging.info("Fatal Tests Complete\n")
 
@@ -216,9 +206,7 @@ def main():
         )
 
         if not (fatal_led_set or warning_led_set):
-            logging.info(
-                f"All Tests Passed, setting led to {sanity_config.success_led}"
-            )
+            logging.info(f"All Tests Passed, setting led to {sanity_config.success_led}")
             set_sanity_check_led(sanity_config, sanity_config.success_led)
         elif not fatal_led_set:
             logging.info(
@@ -226,9 +214,7 @@ def main():
             )
             set_sanity_check_led(sanity_config, sanity_config.warning_fail_led)
         else:
-            logging.info(
-                f"Fatal Test Failed, setting led to {sanity_config.fatal_fail_led}"
-            )
+            logging.info(f"Fatal Test Failed, setting led to {sanity_config.fatal_fail_led}")
             set_sanity_check_led(sanity_config, sanity_config.fatal_fail_led)
 
         logging.info(f"Going to sleep for {sanity_config.check_mins} mins\n")
