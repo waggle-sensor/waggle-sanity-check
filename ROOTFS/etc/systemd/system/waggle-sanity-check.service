@@ -2,8 +2,6 @@
 Description=Waggle Sanity Check
 
 [Service]
-Restart=always
-RestartSec=60s
 WatchdogSec=3min
 ExecStart=/usr/bin/waggle_sanity_check.py
 Nice=5

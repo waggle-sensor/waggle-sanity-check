@@ -2,8 +2,8 @@
 
 case "${1}" in
   configure)
-    echo "Enabling & starting Sanity Check Service"
-    systemctl enable waggle-sanity-check.service
-    systemctl start waggle-sanity-check.service || true
+    echo "Enabling & starting Sanity Check Timer Service"
+    systemctl enable waggle-sanity-check.timer
+    systemctl start waggle-sanity-check.timer || true
     ;;
 esac
