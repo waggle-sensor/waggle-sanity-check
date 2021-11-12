@@ -7,14 +7,14 @@ fi
 
 cd $(dirname $0)
 
-if ! ssh rpi 'cat /sys/bus/iio/devices/*/name' | grep -q -i bme680; then
+if ! ssh ws-rpi 'cat /sys/bus/iio/devices/*/name' | grep -q -i bme680; then
     # NOTE(sean) exit 2 instead of 1 to maintain consistency with old exitcode
     echo "Wagman BME680 Test: device not found FAIL"
     exit 2
 fi
 
 # TODO(sean) use different exit code if ssh fails?
-if ! ssh rpi python3 -s < check_bme_sensors.py; then
+if ! ssh ws-rpi python3 -s < check_bme_sensors.py; then
     echo "RPi BME680 Test: values out of range FAIL"
     exit 1
 fi

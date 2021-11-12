@@ -7,7 +7,7 @@ fi
 
 cd $(dirname $0)
 
-if ! ssh rpi 'ls /dev/serial/by-id/*FTDI_FT232R*'; then
+if ! ssh ws-rpi 'ls /dev/serial/by-id/*FTDI_FT232R*'; then
     echo "RPi Rain Gauge Test: device not found FAIL"
 fi
 

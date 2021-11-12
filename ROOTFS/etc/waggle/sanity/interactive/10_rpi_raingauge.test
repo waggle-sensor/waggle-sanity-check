@@ -7,7 +7,7 @@ fi
 
 cd $(dirname $0)
 
-resp=$(ssh rpi bash -s < rpi_check_raingauge_payload.sh)
+resp=$(ssh ws-rpi bash -s < rpi_check_raingauge_payload.sh)
 exitcode=$?
 
 if [ "$exitcode" -ne 0 ]; then
