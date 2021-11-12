@@ -39,46 +39,46 @@ then
 fi
 if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then
 
-        if [ "$(ssh rpi "echo media_echo_test")" != "media_echo_test" ];
+        if [ "$(ssh ws-rpi "echo media_echo_test")" != "media_echo_test" ];
         then
                 echo "$pf: cannot ssh into RPI FAIL"
                 exit 32
         fi
 
         # check for the nfs mount
-        if ! ssh rpi mount | grep /ro | grep -q 10.31.81.1:/media/rpi;
+        if ! ssh ws-rpi mount | grep /ro | grep -q 10.31.81.1:/media/rpi;
         then
                 echo "$pf: RPI RO partition not mounted FAIL"
                 exit 33
         fi
 
         # check the rw tmpfs mount
-        if ! ssh rpi mount | grep /rw | grep -q root-rw;
+        if ! ssh ws-rpi mount | grep /rw | grep -q root-rw;
         then
                 echo "$pf: RPI RW partition not mounted FAIL"
                 exit 34
         fi
 
         # check the overlayfs mount
-        if ! ssh rpi mount | grep -q overlayfs-root;
+        if ! ssh ws-rpi mount | grep -q overlayfs-root;
         then
                 echo "$pf: RPI overlayfs partition not mounted FAIL"
                 exit 35
         fi
 
         # RPi SDcard mount tests
-        if ! ssh rpi lsblk /dev/mmcblk0p3;
+        if ! ssh ws-rpi lsblk /dev/mmcblk0p3;
         then
                 echo "$pf: RPi plugin-data partition (/dev/mmcblk0p3) not found FAIL"
                 exit 36
         fi
-        if ! ssh rpi mount | grep /dev/mmcblk0p3 | grep -q /media/plugin-data;
+        if ! ssh ws-rpi mount | grep /dev/mmcblk0p3 | grep -q /media/plugin-data;
         then
                 echo "$pf: RPI plugin-data partition (/dev/mmcblk0p3) not mounted FAIL"
                 exit 37
         fi
         # do a read-only check of file system health
-        if ! ssh rpi fsck.ext4 -n /dev/mmcblk0p3 | grep -q clean;
+        if ! ssh ws-rpi fsck.ext4 -n /dev/mmcblk0p3 | grep -q clean;
         then
                 echo "$pf: RPI plugin-data partition (/dev/mmcblk0p3) fsck FAIL"
                 exit 38
