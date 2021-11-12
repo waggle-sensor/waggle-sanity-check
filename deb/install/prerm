@@ -1,4 +1,5 @@
 #!/bin/bash
 
+systemctl stop waggle-sanity-check.timer || true
+systemctl disable waggle-sanity-check.timer || true
 systemctl stop waggle-sanity-check.service || true
-systemctl disable waggle-sanity-check.service || true

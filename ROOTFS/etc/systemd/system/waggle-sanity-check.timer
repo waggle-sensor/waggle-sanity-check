@@ -1,0 +1,10 @@
+[Unit]
+Description=Waggle Sanity Test Timer
+
+[Timer]
+OnBootSec=5m 
+OnUnitActiveSec=60m
+Unit=waggle-sanity-check.service
+
+[Install]
+WantedBy=basic.target
