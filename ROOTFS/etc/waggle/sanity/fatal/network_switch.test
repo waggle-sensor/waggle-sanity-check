@@ -1,5 +1,7 @@
 #!/bin/bash
 
+WDIR=$(dirname $(realpath "${BASH_SOURCE[0]}"))
+
 if ! dev=$(ls /dev/serial/by-id/usb-FTDI* | head -n 1); then
     echo "Network Switch Test: could not detect device FAIL"
     exit 1
@@ -15,6 +17,14 @@ if ! password=$(waggle-get-config -s network-switch -k password); then
     exit 2
 fi
 
+## pass if either the IP or Serial test pass
+# Test01: test if network switch response on IP
+if PYTHONPATH="/etc/waggle/sanity/python-deps/:${PYTHONOATH}" \
+    python3 ${WDIR}/network_switch_ip.py --user "${username}" --password "${password}"; then
+    echo "Network Switch Test (IP): PASS"
+    exit 0
+fi
+
 # required for standard io to work with serial console
 stty -F "$dev" 115200 brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -echo min 100 time 2
 
@@ -26,7 +36,7 @@ for _ in $(seq 20); do
         echo "show version" > "$dev"
         if timeout 3 grep -m 1 "Software Version" "$dev"; then
             echo "logout" > "$dev"
-            echo "Network Switch Test: PASS"
+            echo "Network Switch Test (Serial): PASS"
             exit 0
         fi
         ;;
