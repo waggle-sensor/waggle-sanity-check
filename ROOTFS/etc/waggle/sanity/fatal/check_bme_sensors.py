@@ -40,20 +40,23 @@ import time
 # Some of the values seem to be in odd ranges just following those scaling factors.
 #
 
-
-def valid_temperature(x):
-    return 0.0 <= x <= 80.0
-
-
-ATM = 101325 # Pa
-
-
-def valid_pressure(x):
-    return ATM/100 <= x <= ATM*100
+# Notes from the datasheets on on valid operating range for the BME280/680.
+#
+# Temperature: [-40, 85] C
+# Relative Humidity: [0, 100] %RH
+# Pressure: [30000, 110000] Pa
 
 
-def valid_rel_humidity(x):
-    return 0.0 <= x <= 100.0
+def valid_temperature(value):
+    return -40.0 <= value <= 85.0
+
+
+def valid_rel_humidity(value):
+    return 0.0 <= value <= 100.0
+
+
+def valid_pressure(value):
+    return 30000.0 <= value <= 110000.0
 
 
 # robust_read attempts to read 3 times to address corner case where driver fails
@@ -70,22 +73,30 @@ def read_float(path):
     return float(robust_read(path))
 
 
+# reference from iio plugin
+# ("bme280", "in_humidityrelative_input"): lambda x: x / 1000,
+# ("bme280", "in_pressure_input"): lambda x: x * 1000,
+# ("bme280", "in_temp_input"): lambda x: x / 1000,
 def handle_bme280(path):
-    temp = read_float(path/"in_temp_input") * (1/1000)
+    hum = read_float(path/"in_humidityrelative_input") / 1000
     press = read_float(path/"in_pressure_input") * 1000
-    hum = read_float(path/"in_humidityrelative_input") * (1/1000)
+    temp = read_float(path/"in_temp_input") / 1000
     print(f"bme280 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
 
 
+# reference from iio plugin
+# ("bme680", "in_humidityrelative_input"): lambda x: x,
+# ("bme680", "in_pressure_input"): lambda x: x * 100,
+# ("bme680", "in_temp_input"): lambda x: x / 1000,
 def handle_bme680(path):
     # TODO need to check / calibrate conversion weights
-    temp = read_float(path/"in_temp_input") * (1/1000)
-    press = read_float(path/"in_pressure_input") * 1000
-    hum = read_float(path/"in_humidityrelative_input") * (1/1000)
-    print(f"bm680 temp={temp} C press={press} Pa hum={hum} %RH")
+    hum = read_float(path/"in_humidityrelative_input")
+    press = read_float(path/"in_pressure_input") * 100
+    temp = read_float(path/"in_temp_input") / 1000
+    print(f"bme680 temp={temp} C press={press} Pa hum={hum} %RH")
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
