@@ -77,11 +77,17 @@ def read_float(path):
 # ("bme280", "in_humidityrelative_input"): lambda x: x / 1000,
 # ("bme280", "in_pressure_input"): lambda x: x * 1000,
 # ("bme280", "in_temp_input"): lambda x: x / 1000,
-def handle_bme280(path):
-    hum = read_float(path/"in_humidityrelative_input") / 1000
-    press = read_float(path/"in_pressure_input") * 1000
-    temp = read_float(path/"in_temp_input") / 1000
-    print(f"bme280 temp={temp} C press={press} Pa hum={hum} %RH")
+def handle_bme280(name, path):
+    iio_hum = read_float(path/"in_humidityrelative_input")
+    iio_press = read_float(path/"in_pressure_input")
+    iio_temp = read_float(path/"in_temp_input")
+    print(f"{name} raw temp={iio_temp} press={iio_press} hum={iio_hum}")
+
+    hum = iio_hum / 1000
+    press = iio_press * 1000
+    temp = iio_temp / 1000
+    print(f"{name} tfm temp={temp} C press={press} Pa hum={hum} %RH")
+
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
@@ -91,12 +97,17 @@ def handle_bme280(path):
 # ("bme680", "in_humidityrelative_input"): lambda x: x,
 # ("bme680", "in_pressure_input"): lambda x: x * 100,
 # ("bme680", "in_temp_input"): lambda x: x / 1000,
-def handle_bme680(path):
-    # TODO need to check / calibrate conversion weights
-    hum = read_float(path/"in_humidityrelative_input")
-    press = read_float(path/"in_pressure_input") * 100
-    temp = read_float(path/"in_temp_input") / 1000
-    print(f"bme680 temp={temp} C press={press} Pa hum={hum} %RH")
+def handle_bme680(name, path):
+    iio_hum = read_float(path/"in_humidityrelative_input")
+    iio_press = read_float(path/"in_pressure_input")
+    iio_temp = read_float(path/"in_temp_input")
+    print(f"{name} raw temp={iio_temp} press={iio_press} hum={iio_hum}")
+
+    hum = iio_hum
+    press = iio_press * 100
+    temp = iio_temp / 1000
+    print(f"{name} tfm temp={temp} C press={press} Pa hum={hum} %RH")
+
     assert valid_temperature(temp)
     assert valid_pressure(press)
     assert valid_rel_humidity(hum)
@@ -116,7 +127,7 @@ def main():
         except KeyError:
             print("skipping", name, file=sys.stderr)
             continue
-        handler(path.parent)
+        handler(name, path.parent)
 
 
 if __name__ == "__main__":
