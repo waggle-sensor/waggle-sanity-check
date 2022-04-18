@@ -31,7 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with UnifiSwitchClient(
-        host=f"https://10.31.81.2", username=args.user, password=args.password
+        host=f"https://switch", username=args.user, password=args.password
     ) as client:
         ret, info = client.get_device_info()
         if ret:
