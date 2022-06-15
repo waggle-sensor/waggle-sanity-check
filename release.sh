@@ -11,7 +11,7 @@ mkdir -p ${BASEDIR}/DEBIAN
 cat > ${BASEDIR}/DEBIAN/control <<EOL
 Package: ${NAME}
 Version: ${VERSION}
-Maintainer: sagecontinuum.org
+Maintainer: waggle-edge.ai
 Description: NX Sanity Check Services
 Architecture: ${ARCH}
 Priority: optional
