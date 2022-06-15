@@ -1,38 +1,8 @@
 #!/bin/bash -e
 
-print_help() {
-  echo """
-usage: build.sh [-f]
-Create the versioned Debian package.
- -f : force the build to proceed (debugging only) without checking for tagged commit
-"""
-}
-
-FORCE=
-while getopts "f?" opt; do
-  case $opt in
-    f) # force build
-      echo "** Force build: ignore tag depth check **"
-      FORCE=1
-      ;;
-    ?|*)
-      print_help
-      exit 1
-      ;;
-  esac
-done
-
-# determine full version
-VERSION=$(git describe --tags --long --dirty | cut -c2-)
-
-TAG_DEPTH=$(echo ${VERSION} | cut -d '-' -f 2)
-if [[ -z "${FORCE}" && "${TAG_DEPTH}_" != "0_" ]]; then
-  echo "Error:"
-  echo "  The current git commit has not been tagged. Please create a new tag first to ensure a proper unique version number."
-  echo "  Use -f to ignore error (for debugging only)."
-  exit 1
-fi
-
-docker build -t sanity_check .
-docker run --rm --privileged \
--v `pwd`:/output/ -e VERSION=$VERSION sanity_check ./release.sh 
+docker run --rm \
+  -e NAME="waggle-sanity-check" \
+  -e DESCRIPTION="NX Sanity Check Services" \
+  -e LATE_CMD="./custom.sh" \
+  -v "$PWD:/repo" \
+  joe_deb:latest
