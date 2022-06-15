@@ -2,31 +2,31 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     name: CI
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0 # checkout all git history
-    - name: sanity the test scripts
-      run: |
-        set -x
-        paths=(
-          "ROOTFS/etc/waggle/sanity/fatal"
-          "ROOTFS/etc/waggle/sanity/warning"
-        )
-        for path in ${paths[@]}; do
-          for f in $(find $path -type f); do
-            if [ ! -x $f ]; then
-              echo "Error: $f needs execute permissions"
-              exit 1
-            fi
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # checkout all git history
+      - name: sanity the test scripts
+        run: |
+          set -x
+          paths=(
+            "ROOTFS/etc/waggle/sanity/fatal"
+            "ROOTFS/etc/waggle/sanity/warning"
+          )
+          for path in ${paths[@]}; do
+            for f in $(find $path -type f); do
+              if [ ! -x $f ]; then
+                echo "Error: $f needs execute permissions"
+                exit 1
+              fi
+            done
           done
-        done
-    - name: execute test Debian build
-      run: ./build.sh -f
+      - name: execute test Debian build
+        run: ./build.sh -f
