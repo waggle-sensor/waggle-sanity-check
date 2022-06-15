@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  push:
+    branches: ["main"]
   pull_request:
-    branches: [main]
+    branches: ["main"]
 
 jobs:
   build:
@@ -11,8 +13,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # checkout all git history
+
       - name: sanity the test scripts
         run: |
           set -x
@@ -28,5 +29,3 @@ jobs:
               fi
             done
           done
-      - name: execute test Debian build
-        run: ./build.sh -f
