@@ -35,4 +35,4 @@ fi
 
 docker build -t sanity_check .
 docker run --rm --privileged \
--v `pwd`:/output/ -e VERSION=$VERSION sanity_check
+-v "$PWD:/repo" -e VERSION=$VERSION sanity_check

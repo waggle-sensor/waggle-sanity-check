@@ -27,4 +27,5 @@ pip3 install --ignore-installed --target="${BASEDIR}/etc/waggle/sanity/python-de
     https://github.com/waggle-sensor/unifi_switch_client/releases/download/0.0.8/unifi_switch_client-0.0.8-py3-none-any.whl
 
 dpkg-deb --root-owner-group --build ${BASEDIR} "${NAME}_${VERSION}_${ARCH}.deb"
-mv *.deb /output/
+mkdir -p /repo/output/
+mv *.deb /repo/output/
