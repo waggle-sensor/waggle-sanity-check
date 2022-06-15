@@ -10,7 +10,7 @@ ARCH=all
 mkdir -p ${BASEDIR}/DEBIAN
 cat > ${BASEDIR}/DEBIAN/control <<EOL
 Package: ${NAME}
-Version: ${VERSION}
+Version: ${VERSION_LONG}
 Maintainer: waggle-edge.ai
 Description: NX Sanity Check Services
 Architecture: ${ARCH}
@@ -26,6 +26,6 @@ cp -pr ROOTFS/* ${BASEDIR}/
 pip3 install --ignore-installed --target="${BASEDIR}/etc/waggle/sanity/python-deps/" \
     https://github.com/waggle-sensor/unifi_switch_client/releases/download/0.0.8/unifi_switch_client-0.0.8-py3-none-any.whl
 
-dpkg-deb --root-owner-group --build ${BASEDIR} "${NAME}_${VERSION}_${ARCH}.deb"
+dpkg-deb --root-owner-group --build ${BASEDIR} "${NAME}_${VERSION_SHORT}_${ARCH}.deb"
 mkdir -p /repo/output/
 mv *.deb /repo/output/
