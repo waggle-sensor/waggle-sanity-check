@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "NX-Core K3S Node Test: Begin"
 
-if timeout 30s kubectl get nodes | grep ws-nxcore | grep ' Ready ' | grep -q control-plane,master; then
+if kubectl get nodes | grep ws-nxcore | grep ' Ready ' | grep -q control-plane,master; then
     echo "NX-Core K3S Node Test: NX-Core configured and ready as K3S master PASS"
     exit 0
 fi
