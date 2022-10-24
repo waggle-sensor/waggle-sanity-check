@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Test for WES k3s daemonsets running on all possible nodes (nx-core, nx-agent, rpi)
+## $1: test string
+## $2: service name
+
+pf="$1"
+echo "$pf: Begin"
+
+pod="$2"
+
+# get the count of available (i.e. running) pods for the daemonset (count of ready)
+## ex. 3
+numPodsAvailable=$(kubectl get ds $pod -o json | jq -r ."status"."numberAvailable")
+
+# The number of nodes that are running the daemon pod, but are not supposed to run the daemon (i.e. on terminated nodes)
+## ex. 0
+numPodsExtra=$(kubectl get ds $pod -o json | jq -r ."status"."numberMisscheduled")
+
+# get list of "Ready" nodes
+## ex. 000048b02d0766be.ws-nxcore
+search=$(kubectl get node | grep " Ready" | cut -d' ' -f1)
+readarray -t nodes <<<"$search"
+
+# get list of all "Running" pods for this daemonset
+## ex. wes-metrics-agent-7xt9t
+search=$(kubectl get pod | grep $pod | grep " Running" | cut -d' ' -f1)
+readarray -t pods <<<"$search"
+
+# test the number of available pods matches the found "Running" pods
+if [ $numPodsAvailable -ne ${#pods[@]} ]; then
+    echo "$pf: Available pod count ($numPodsAvailable) does not match count of 'Running' pods (${#pods[@]}), FAIL"
+    exit 2
+fi
+
+# test the number of misscheduled pods
+if [ $numPodsExtra -ne 0 ]; then
+    echo "$pf: Mis-scheduled pods ($numPodsExtra) detected, FAIL"
+    exit 3
+fi
+
+# test that each pod contains a node in the node array
+for p in "${pods[@]}"; do
+    # get the node the pod is running on
+    pnode=$(kubectl get pod $p -o json | jq -r ."spec"."nodeName")
+    echo "$pf: $pod [$pnode] found and running"
+    found=
+    for n in "${nodes[@]}"; do
+        if [ $n == $pnode ]; then
+            found=1
+            break
+        fi
+    done
+    if [ -z "$found" ]; then
+        echo "$pf: $pod [$pnode] not found in list of 'Ready' nodes, FAIL"
+        exit 4
+    fi
+done
+
+echo "$pf: $pod (count: ${#pods[@]}) is running on expected k3s nodes, PASS"
+exit 0
