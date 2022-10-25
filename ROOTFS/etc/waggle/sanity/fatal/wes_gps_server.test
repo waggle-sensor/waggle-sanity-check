@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/etc/waggle/sanity/_helper/wes_deployment.test "WES GPS Server Test" "wes-gps-server" "ws-nxcore"
