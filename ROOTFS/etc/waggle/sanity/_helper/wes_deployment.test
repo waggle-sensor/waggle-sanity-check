@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Test for WES k3s deployment running on the specified node
+## $1: test string
+## $2: service name
+## $3: node name (i.e. ws-nxcore, ws-rpi)
+
+pf="$1"
+echo "$pf: Begin"
+
+pod="$2"
+node="$3"
+
+# get node name for this deployment
+## ex. wes-gps-server-5dc56cffff-2g7bg
+podname=$(kubectl get pod | grep $pod | grep " Running" | cut -d' ' -f1)
+if [ -z "$podname" ]; then
+    echo "$pf: Running pod ($pod) not found, FAIL"
+    exit 1
+fi
+
+# test that each pod is running on the correct node
+pnode=$(kubectl get pod $podname -o json | jq -r ."spec"."nodeName")
+if [[ $pnode == *$node ]]; then
+    echo "$pf: $pod [$pnode] found and running"
+else
+    echo "$pf: $pod not found in node $node, FAIL"
+    exit 2
+fi
+
+echo "$pf: $pod is running on expected k3s node [$node], PASS"
+exit 0
