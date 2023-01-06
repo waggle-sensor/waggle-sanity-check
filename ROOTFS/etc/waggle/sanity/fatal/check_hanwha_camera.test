@@ -31,7 +31,7 @@ def print_log(msg, is_pass, title="Hanwha camera test"):
         print(f"{title}: {msg} FAIL")
 
 
-def read_camera_manifest(topic_camera="cameras", path="/etc/waggle/node_manifest.json"):
+def read_camera_manifest(path="/etc/waggle/node-manifest-v2.json"):
     if not os.path.exists(path):
         raise FileNotFoundError(f"manifest does not exist: {path}")
 
@@ -40,12 +40,8 @@ def read_camera_manifest(topic_camera="cameras", path="/etc/waggle/node_manifest
             manifest = json.loads(file.read())
         except:
             raise IOError(f"Failed to load the manifest: {path}")
-        if topic_camera not in manifest:
-            raise IOError(f"no {topic_camera} section found in the manifest")
-        else:
-            for camera in manifest[topic_camera]:
-                if camera["present"] == True:
-                    yield camera
+
+        return [s for s in manifest["sensors"] if "camera" in s["name"]]
 
 
 def http_request(url, user="waggle", pw="a2kWe89wak3na7@", timeout=5):
@@ -109,7 +105,7 @@ def check(camera_ip_domain="10.31.81."):
         # check if the device model is listed in manifest
         camera_to_delete = None
         for camera in cameras:
-            if camera["model"] == device_info["Model"]:
+            if camera["hardware"]["hw_model"] == device_info["Model"]:
                 camera_to_delete = camera
                 break
 
