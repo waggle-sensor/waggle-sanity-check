@@ -1,5 +1,23 @@
 #!/bin/bash
 
-echo "Lan0 Status Test: Begin"
-# use connectivity helper function
-/etc/waggle/sanity/_helper/connectivity_status.test lan0
+testname="Lan0 Status Test"
+
+pass() { echo "$testname: $1 PASS"; exit 0; }
+fail() { echo "$testname: $2 FAIL"; exit "$1"; }
+
+echo "$testname: Begin"
+INTF="lan0"
+
+if [ ! -f /sys/class/net/$INTF/operstate ]; then
+    fail 1 "$INTF not present"
+fi
+
+if ! cat /sys/class/net/$INTF/operstate | grep -q -e "up" -e "unknown"; then
+    fail 4 "$INTF is not 'up' or 'unkonwn'"
+fi
+
+if ! ip a show $INTF | grep -q inet; then
+  fail 5 "$INTF does not have an IP address"
+fi
+
+pass "$INTF device exists"
