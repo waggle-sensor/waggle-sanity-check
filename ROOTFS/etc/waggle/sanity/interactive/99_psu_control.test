@@ -5,21 +5,19 @@
 pf="Power Supply Control Interactive Test"
 echo "$pf: Begin"
 
+psumodel=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "psu").hardware.hardware')
+
 ep_supply=
-if cat /etc/waggle/node_manifest.json | jq .psu.ep_supply.present | grep -q true; then
+if [[ "$psumodel" == "psu-bbbd" ]]; then
 	echo "$pf: testing EP supply"
 	ep_supply=1
 else
 	echo "$pf: SKIPPING testing EP supply (not installed)"
 fi
 
-ph_supply=
-if cat /etc/waggle/node_manifest.json | jq .psu.ph_supply.present | grep -q true; then
-	echo "$pf: testing PH supply"
-	ph_supply=1
-else
-	echo "$pf: SKIPPING testing PH supply (not installed)"
-fi
+# assume we have "ph supply", as all nodes have this
+echo "$pf: testing PH supply"
+ph_supply=1
 
 gpiopath="/sys/class/gpio"
 
