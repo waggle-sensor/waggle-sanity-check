@@ -10,15 +10,6 @@ fail() { echo "$testname: $2 FAIL"; exit "$1"; }
 
 echo "$testname: Begin"
 
-# check system manifest to see if this test needs to be done.
-if ! manifest=$(jq .connectivity.wan0.present /etc/waggle/node_manifest.json); then
-    fail 1 "could not read manifest"
-fi
-
-if echo "$manifest" | grep -q false; then
-    pass "wan not required by manifest"
-fi
-
 # if already has an ip address, then we know we're good.
 if ip addr show dev wan0 | grep -q "inet .*/.*"; then
     pass "wan has ip address"
