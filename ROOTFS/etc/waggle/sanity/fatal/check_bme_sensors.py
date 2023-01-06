@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 # NOTE(sean) The main doc on the iio (Industrial I/O) /sys tree was here:
 # https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-bus-iio
@@ -78,9 +78,9 @@ def read_float(path):
 # ("bme280", "in_pressure_input"): lambda x: x * 1000,
 # ("bme280", "in_temp_input"): lambda x: x / 1000,
 def handle_bme280(name, path):
-    iio_hum = read_float(path/"in_humidityrelative_input")
-    iio_press = read_float(path/"in_pressure_input")
-    iio_temp = read_float(path/"in_temp_input")
+    iio_hum = read_float(path / "in_humidityrelative_input")
+    iio_press = read_float(path / "in_pressure_input")
+    iio_temp = read_float(path / "in_temp_input")
     print(f"{name} raw temp={iio_temp} press={iio_press} hum={iio_hum}")
 
     hum = iio_hum / 1000
@@ -101,9 +101,9 @@ def handle_bme280(name, path):
 # ("bme680", "in_pressure_input"): lambda x: x * 100,
 # ("bme680", "in_temp_input"): lambda x: x / 1000,
 def handle_bme680(name, path):
-    iio_hum = read_float(path/"in_humidityrelative_input")
-    iio_press = read_float(path/"in_pressure_input")
-    iio_temp = read_float(path/"in_temp_input")
+    iio_hum = read_float(path / "in_humidityrelative_input")
+    iio_press = read_float(path / "in_pressure_input")
+    iio_temp = read_float(path / "in_temp_input")
     print(f"{name} raw temp={iio_temp} press={iio_press} hum={iio_hum}")
 
     hum = iio_hum

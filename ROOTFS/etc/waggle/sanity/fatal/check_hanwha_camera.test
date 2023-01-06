@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
-import os
 import json
-import urllib.error, urllib.request
+import os
+import sys
+import urllib.error
+import urllib.request
 
 # TODO: credential denial by Hanwha camera is not captured
 #       by the http request; needs to look into the body
@@ -22,90 +23,101 @@ BAD_RESPONSE = 5
 RESERVED2 = 6
 RESERVED3 = 7
 
-def print_log(msg, is_pass, title='Hanwha camera test'):
+
+def print_log(msg, is_pass, title="Hanwha camera test"):
     if is_pass:
-        print(f'{title}: {msg} PASS')
+        print(f"{title}: {msg} PASS")
     else:
-        print(f'{title}: {msg} FAIL')
+        print(f"{title}: {msg} FAIL")
 
 
-def read_camera_manifest(topic_camera='cameras', path='/etc/waggle/node_manifest.json'):
+def read_camera_manifest(topic_camera="cameras", path="/etc/waggle/node_manifest.json"):
     if not os.path.exists(path):
-        raise FileNotFoundError(f'manifest does not exist: {path}')
+        raise FileNotFoundError(f"manifest does not exist: {path}")
 
-    with open(path, 'r') as file:
+    with open(path, "r") as file:
         try:
             manifest = json.loads(file.read())
         except:
-            raise IOError(f'Failed to load the manifest: {path}')
+            raise IOError(f"Failed to load the manifest: {path}")
         if topic_camera not in manifest:
-            raise IOError(f'no {topic_camera} section found in the manifest')
+            raise IOError(f"no {topic_camera} section found in the manifest")
         else:
             for camera in manifest[topic_camera]:
-                if camera['present'] == True:
+                if camera["present"] == True:
                     yield camera
 
 
-def http_request(url, user='waggle', pw='a2kWe89wak3na7@', timeout=5):
+def http_request(url, user="waggle", pw="a2kWe89wak3na7@", timeout=5):
     passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     passman.add_password(None, url, user, pw)
     authhandler = urllib.request.HTTPDigestAuthHandler(passman)
     opener = urllib.request.build_opener(authhandler)
     urllib.request.install_opener(opener)
-    headers = {'Accept': 'application/json'}
+    headers = {"Accept": "application/json"}
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             return response.code, response.read()
     except urllib.error.URLError:
-        return 404, b''
+        return 404, b""
 
 
-def check(camera_ip_domain='10.31.81.'):
+def check(camera_ip_domain="10.31.81."):
     try:
         cameras = list(read_camera_manifest())
     except FileNotFoundError as ex:  # failed to locate the manifest
         print_log(str(ex), is_pass=False)
-        return (1 << NO_NODE_MANIFEST)
+        return 1 << NO_NODE_MANIFEST
     except IOError as ex:  # failed to read the manifest or no camera section present
         print_log(str(ex), is_pass=False)
-        return (1 << READ_ERROR_MANIFEST)
+        return 1 << READ_ERROR_MANIFEST
     if len(cameras) == 0:
-        print_log('no cameras listed in the manifest, skipping test', is_pass=True)
+        print_log("no cameras listed in the manifest, skipping test", is_pass=True)
         return 0
 
     error_code = 0x00
     for n in range(10, 20, 1):
         # get device info
-        return_code, body_json = http_request(f'http://{camera_ip_domain}{n}/stw-cgi/system.cgi?msubmenu=deviceinfo&action=view')
+        return_code, body_json = http_request(
+            f"http://{camera_ip_domain}{n}/stw-cgi/system.cgi?msubmenu=deviceinfo&action=view"
+        )
         if return_code != 200:
             # only properly provisioned Hanwha camera should be able to answer to this call
             # NOTE: unauthorized error 401 is not captured in the http response
             #       it is encoded inside the body by Hanwha SUN API
-            #if return_code == 401:
+            # if return_code == 401:
             #    print_log(f'access to {camera_ip_domain}{n} denied;unauthorized', is_pass=False)
             continue
         try:
             device_info = json.loads(body_json)
         except Exception as ex:
-            print_log(f'failed to parse device information from {camera_ip_domain}{n}; {str(ex)}', is_pass=False)
+            print_log(
+                f"failed to parse device information from {camera_ip_domain}{n}; {str(ex)}",
+                is_pass=False,
+            )
             error_code |= 1 << BAD_RESPONSE
             continue
 
-        return_code, body_json = http_request(f'http://{camera_ip_domain}{n}/stw-cgi/video.cgi?msubmenu=snapshot&action=view')
+        return_code, body_json = http_request(
+            f"http://{camera_ip_domain}{n}/stw-cgi/video.cgi?msubmenu=snapshot&action=view"
+        )
         if return_code != 200:
-            print_log(f'failed to get a snapshot from {camera_ip_domain}{n}', is_pass=False)
+            print_log(f"failed to get a snapshot from {camera_ip_domain}{n}", is_pass=False)
             error_code |= 1 << FAILED_TO_GET_SNAPSHOT
 
         # check if the device model is listed in manifest
         camera_to_delete = None
         for camera in cameras:
-            if camera['model'] == device_info['Model']:
+            if camera["model"] == device_info["Model"]:
                 camera_to_delete = camera
                 break
 
         if camera_to_delete is None:
-            print_log(f'unlisted camera is found with model {device_info["Model"]} at {camera_ip_domain}{n}', is_pass=False)
+            print_log(
+                f'unlisted camera is found with model {device_info["Model"]} at {camera_ip_domain}{n}',
+                is_pass=False,
+            )
             error_code |= 1 << UNLISTED_CAMERA
         else:
             cameras.remove(camera_to_delete)
@@ -113,11 +125,12 @@ def check(camera_ip_domain='10.31.81.'):
 
     if len(cameras) > 0:
         for remaining_camera in cameras:
-            print_log(f'{remaining_camera} not found', is_pass=False)
+            print_log(f"{remaining_camera} not found", is_pass=False)
         error_code |= 1 << CAMERA_NOT_FOUND
 
     return error_code
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     return_code = check()
     exit(return_code)
