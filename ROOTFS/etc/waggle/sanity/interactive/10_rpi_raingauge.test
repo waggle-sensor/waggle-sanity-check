@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if jq .shield.present /etc/waggle/node_manifest.json | grep -q false; then
+if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "rpi-shield")' | grep -q serial_no; then
     echo "RPi Rain Gauge Test: Stevenson Shield not installed in this node, assume PASS"
     exit 0
 fi
