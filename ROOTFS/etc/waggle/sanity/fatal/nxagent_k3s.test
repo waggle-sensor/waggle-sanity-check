@@ -2,7 +2,7 @@
 echo "NX-Agent K3S Node Test: Begin"
 
 # read the system manifest to see if this system is to have an NX-Agent
-if cat /etc/waggle/node_manifest.json | jq .nxagent.present | grep -q false; then
+if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "nxagent")' | grep -q serial_no; then
     echo "NX-Agent K3S Node Test: NX-Agent not installed in this node, assumed PASS"
     exit 0
 fi
