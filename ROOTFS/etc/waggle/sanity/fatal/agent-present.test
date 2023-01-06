@@ -2,7 +2,8 @@
 
 echo "Agent Present Test: Begin"
 
-expectedAgent=$(cat /etc/waggle/node_manifest.json | jq '[.nxagent | select(.present == true)] | length')
+# find all the nx agent serial_no and count them
+expectedAgent=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "nxagent").serial_no' | wc -l)
 
 if [[ $expectedAgent == 0 ]]; then
     echo "Agent Present Test: No agent expected for this device PASS"
