@@ -2,7 +2,8 @@
 
 echo "RPi Present Test: Begin"
 
-expectedRPi=$(cat /etc/waggle/node_manifest.json | jq '[.shield | select(.present == true)] | length')
+# find all the rpi (shield) serial_no and count them
+expectedRPi=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "rpi-shield").serial_no' | wc -l)
 
 if [[ $expectedRPi == 0 ]]; then
     echo "RPi Present Test: No shield expected for this device PASS"

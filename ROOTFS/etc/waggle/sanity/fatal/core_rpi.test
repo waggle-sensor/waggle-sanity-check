@@ -3,6 +3,8 @@
 pf="RPI test"
 echo "$pf: Begin"
 
+MANIFEST_FILE=/etc/waggle/node-manifest-v2.json
+
 # eMMC RPi mount test
 if ! lsblk /dev/mmcblk0p11;
 then
@@ -32,12 +34,12 @@ if ! systemctl is-active dnsmasq; then
 fi
 
 # Test items on the RPi (if present)
-if [ ! -f /etc/waggle/node_manifest.json ];
+if [ ! -f ${MANIFEST_FILE} ];
 then
-        echo "$pf: node_manifest.json does not exist FAIL"
+        echo "$pf: ${MANIFEST_FILE} does not exist FAIL"
         exit 31
 fi
-if cat /etc/waggle/node_manifest.json | jq .shield.present | grep -q true; then
+if cat ${MANIFEST_FILE} | jq -r '.computes[] | select(.name == "rpi-shield")' | grep -q serial_no; then
 
         if [ "$(ssh ws-rpi "echo media_echo_test")" != "media_echo_test" ];
         then
