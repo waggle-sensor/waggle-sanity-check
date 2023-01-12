@@ -8,7 +8,7 @@ fail() { echo "$testname: $2 FAIL"; exit "$1"; }
 echo "$testname: Begin"
 
 # check system manifest to see if this test needs to be done.
-if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "wifi")' | grep -q name; then
+if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.hardware.hardware == "wifi")' | grep -q name; then
     pass "wifi not required by manifest"
 fi
 

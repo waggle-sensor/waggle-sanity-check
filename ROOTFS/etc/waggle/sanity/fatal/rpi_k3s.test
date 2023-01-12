@@ -2,7 +2,7 @@
 echo "RPi K3S Node Test: Begin"
 
 # read the system manifest to see if this system is to have a Stevenson Shield
-if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "rpi-shield")' | grep -q serial_no; then
+if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select((.hardware.hardware|startswith("rpi")) and (.zone == "shield"))' | grep -q serial_no; then
     echo "RPi K3S Node Test: Stevenson Shield not installed in this node, assume PASS"
     exit 0
 fi

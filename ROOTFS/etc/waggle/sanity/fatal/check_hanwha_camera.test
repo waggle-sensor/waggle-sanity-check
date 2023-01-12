@@ -23,6 +23,8 @@ BAD_RESPONSE = 5
 RESERVED2 = 6
 RESERVED3 = 7
 
+CAMERA_MODELS = ["XNV-8082R", "XNV-8080R", "XNP-6400RW", "XNF-8010RV", "XNV-8081Z"]
+
 
 def print_log(msg, is_pass, title="Hanwha camera test"):
     if is_pass:
@@ -41,7 +43,7 @@ def read_camera_manifest(path="/etc/waggle/node-manifest-v2.json"):
         except:
             raise IOError(f"Failed to load the manifest: {path}")
 
-        return [s for s in manifest["sensors"] if "camera" in s["name"]]
+        return [s for s in manifest["sensors"] if s["hardware"]["hw_model"] in CAMERA_MODELS]
 
 
 def http_request(url, user="waggle", pw="a2kWe89wak3na7@", timeout=5):

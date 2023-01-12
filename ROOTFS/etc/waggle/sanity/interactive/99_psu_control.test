@@ -5,7 +5,7 @@
 pf="Power Supply Control Interactive Test"
 echo "$pf: Begin"
 
-psumodel=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "psu").hardware.hardware')
+psumodel=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.hardware.hardware|startswith("psu")).hardware.hardware')
 
 ep_supply=
 if [[ "$psumodel" == "psu-bbbd" ]]; then

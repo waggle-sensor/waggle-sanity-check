@@ -39,7 +39,7 @@ then
         echo "$pf: ${MANIFEST_FILE} does not exist FAIL"
         exit 31
 fi
-if cat ${MANIFEST_FILE} | jq -r '.computes[] | select(.name == "rpi-shield")' | grep -q serial_no; then
+if cat ${MANIFEST_FILE} | jq -r '.computes[] | select((.hardware.hardware|startswith("rpi")) and (.zone == "shield"))' | grep -q serial_no; then
 
         if [ "$(ssh ws-rpi "echo media_echo_test")" != "media_echo_test" ];
         then

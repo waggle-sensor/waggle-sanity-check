@@ -2,7 +2,7 @@
 
 pf="WES Audio Server Test"
 
-if cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select(.name == "rpi-shield")' | grep -q serial_no; then
+if cat /etc/waggle/node-manifest-v2.json | jq -r '.computes[] | select((.hardware.hardware|startswith("rpi")) and (.zone == "shield"))' | grep -q serial_no; then
     /etc/waggle/sanity/_helper/wes_deployment.test "$pf" "wes-audio-server" "ws-rpi"
 else
     echo "$pf: Stevenson Shield not installed in this node, skip test"
