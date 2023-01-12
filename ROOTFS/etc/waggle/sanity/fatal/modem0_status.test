@@ -8,7 +8,7 @@ fail() { echo "$testname: $2 FAIL"; exit "$1"; }
 echo "$testname: Begin"
 
 # check system manifest to see if this test needs to be done.
-if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "modem")' | grep -q name; then
+if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select((.hardware.hardware == "modem"))' | grep -q name; then
     pass "modem not required by manifest"
 fi
 
@@ -31,7 +31,7 @@ fi
 if echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* --'; then
     pass "modem not connected but not in a failed state."
 elif echo "$modeminfo" | grep -q 'modem.generic.state-failed-reason.* sim-missing'; then
-    if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "modem-sim")' | grep -q name; then
+    if ! cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select((.hardware.hardware|startswith("modem-sim")))' | grep -q name; then
         pass "modem sim not required by manifest - this is considered an allowed state."
     else
         fail 4 "failed to find sim card"

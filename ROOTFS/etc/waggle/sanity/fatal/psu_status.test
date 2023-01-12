@@ -67,7 +67,7 @@ echo "$pf: PG2 set to $( cat $gpiopath/gpio$pg2/value )"
 echo "$pf: PG3 set to $( cat $gpiopath/gpio$pg3/value )"
 echo "$pf: PG4 set to $( cat $gpiopath/gpio$pg4/value )"
 
-psumodel=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.name == "psu").hardware.hardware')
+psumodel=$(cat /etc/waggle/node-manifest-v2.json | jq -r '.resources[] | select(.hardware.hardware|startswith("psu")).hardware.hardware')
 
 isEPPresent=
 if [[ "$psumodel" == "psu-bbbd" ]]; then
